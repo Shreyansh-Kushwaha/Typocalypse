@@ -10,6 +10,11 @@ Master the keyboard by navigating a dynamic story that branches with every choic
 
 ---
 
+## 📷 ScreenShots
+
+<img width="1348" height="710" alt="Screenshot - 7_31_2025 , 2_08_30 AM" src="https://github.com/user-attachments/assets/9b7a8343-9b10-4ee5-93bb-5010bb52abbd" />
+
+---
 ## 📖 About The Project
 
 Typing Adventure is an interactive game designed to make practicing typing fun. Forget boring, repetitive drills. Here, you are the hero of a story that unfolds as you type.
