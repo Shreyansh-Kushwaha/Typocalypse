@@ -77,13 +77,6 @@ document.getElementById("game").addEventListener("keyup", async (ev) => {
 
 
 
-
-
-
-  
-  
-
-  //testing 0
   if (isSpace) {
     ev.preventDefault();
 
@@ -220,7 +213,39 @@ function showChoices(options) {
 }
 
 
+// Light mode toggle js here 
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const body = document.body;
 
 
-// ---------------- Start Game ----------------
+    const applyTheme = (theme) => {
+        if (theme === 'light') {
+            body.classList.add('light-mode');
+        } else {
+            body.classList.remove('light-mode');
+        }
+    };
+
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+
+
+    themeToggleBtn.addEventListener('click', () => {
+        body.classList.toggle('light-mode');
+
+
+        if (body.classList.contains('light-mode')) {
+            localStorage.setItem('theme', 'light');
+        } else {
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+    
+
+});
+
+
+
+
 newStory();
