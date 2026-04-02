@@ -1,41 +1,15 @@
-/* Typing Game Styles */
-.word {
-  font-family: 'Courier New', monospace;
-  display: inline-block;
-  margin: 0 4px 4px 0;
-}
+/* App.css */
 
-.letter {
-  display: inline;
-}
-
-.letter.correct {
-  color: #10b981;
-  font-weight: 500;
-}
-
-.letter.incorrect {
-  color: #ef4444;
-  text-decoration: underline wavy #ef4444;
-}
-
-.letter.current {
-  background-color: #fbbf24;
-  color: #000;
-  font-weight: bold;
-}
-
-.word.current .letter.current {
-  animation: blink 1s infinite;
+.App {
+  width: 100%;
+  min-height: 100vh;
+  /* Make sure App doesn't force a flex layout that crushes your pages */
+  display: block; 
 }
 
 @keyframes blink {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 /* Custom scrollbar */
@@ -62,15 +36,11 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 textarea {
-  @apply bg-white/20 border border-gray-300 rounded text-white placeholder-gray-300;
-  @apply focus:outline-none focus:ring-2 focus:ring-purple-500;
+  @apply bg-white/20 border border-gray-300 rounded text-slate-900 dark:text-white placeholder-gray-400;
+  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500;
 }
 
-input::placeholder {
-  color: rgba(209, 213, 219, 0.7);
-}
-
-/* Buttons */
+/* Buttons and Links */
 button {
   @apply transition duration-200;
 }
@@ -79,138 +49,6 @@ button:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
 
-/* Links */
 a {
   @apply transition duration-200;
-}
-
-a:hover {
-  @apply opacity-80;
-}
-
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
-}
-
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
 }
