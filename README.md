@@ -4,49 +4,129 @@ A narrative typing game where your speed and choices forge a new adventure every
 
 Master the keyboard by navigating a dynamic story that branches with every choice you type. This isn't just a game; it's a tool to help you boost your typing speed and accuracy in an engaging, story-driven environment.
 
-<div align="center">
-  </div>
+## 🛠️ Tech Stack
 
+- **Frontend**: React with TypeScript, Tailwind CSS
+- **Backend**: Node.js with Express
+- **Database**: MongoDB Atlas
+- **Authentication**: JWT-based
+- **AI**: OpenRouter API for story generation
 
----
+## 📁 Project Structure
 
-## 📷 ScreenShots
+```
+Typocalypse/
+├── client/          # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── pages/
+│   │   └── ...
+├── server/          # Node.js backend
+│   ├── models/
+│   ├── index.js
+│   └── ...
+└── README.md
+```
 
-<img width="1348" height="710" alt="Screenshot - 7_31_2025 , 2_08_30 AM" src="https://github.com/Shreyansh-Kushwaha/Typocalypse/blob/main/109.jpg" />
+## 🚀 Getting Started
 
----
-## 📖 About The Project
+### Prerequisites
 
-Typing Adventure is an interactive game designed to make practicing typing fun. Forget boring, repetitive drills. Here, you are the hero of a story that unfolds as you type.
+- Node.js (v16 or higher)
+- MongoDB (local or Atlas)
+- OpenRouter API key
 
-At each step of the journey, a new part of the narrative is presented. Your task is to type it out accurately. Once you succeed, you'll be faced with choices that determine where the story goes next. The entire experience is designed to keep you engaged while your fingers fly across the keyboard, naturally improving your words-per-minute (WPM) and accuracy.
+### Installation
 
----
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Typocalypse
+   ```
 
-## ✨ Features
+2. **Set up the backend**
+   ```bash
+   cd server
+   npm install
+   ```
 
-- **Dynamic Storylines:** Experience a new, procedurally generated story every time you play.
-- **Branching Narratives:** Your choices matter! Steer the plot in different directions.
-- **Performance Tracking:** Get real-time feedback on your typing speed (WPM) and accuracy.
-- **Minimalist UI:** A clean and distraction-free interface to keep you focused on the story and your typing.
-- **Lightweight & Fast:** Built with a simple stack for a smooth and responsive experience.
+3. **Configure environment variables**
+   - Copy `.env` file in server directory
+   - Add your MongoDB URI
+   - Add your OpenRouter API key
+   - Set a secure JWT secret
 
----
+4. **Set up the frontend**
+   ```bash
+   cd ../client
+   npm install
+   ```
 
-## 🛠️ Built With
+### Running the Application
 
-This project is built with modern, efficient technologies:
+1. **Start the backend server**
+   ```bash
+   cd server
+   npm run dev
+   ```
+   Server will run on http://localhost:3000
 
-### Frontend:
-* HTML5
-* CSS3
-* Vanilla JavaScript
+2. **Start the frontend**
+   ```bash
+   cd client
+   npm run dev
+   ```
+   Frontend will run on http://localhost:5173
 
-### Backend:
-* Node.js
-* Express.js
+3. **Open your browser**
+   Navigate to http://localhost:5173
 
----
+## 🎮 How to Play
+
+1. **Sign up/Login** to create an account
+2. **Choose a genre** from Fantasy, Horror, Sci-Fi, Mystery, Adventure, or Romance
+3. **Type the story** as it appears on screen
+4. **Make choices** to continue the branching narrative
+5. **Improve your WPM** and accuracy with each game
+
+## 📊 Features
+
+- **Dynamic Storylines**: AI-generated stories that branch based on your choices
+- **Real-time Typing Metrics**: WPM and accuracy tracking
+- **Multiple Genres**: Choose from 6 different story genres
+- **User Authentication**: Secure signup/login with JWT
+- **Game Progress**: Save and continue games
+- **Responsive Design**: Works on desktop and mobile
+
+## 🔧 API Endpoints
+
+### Authentication
+- `POST /auth/signup` - User registration
+- `POST /auth/login` - User login
+
+### Game
+- `POST /game/start` - Start a new game
+- `POST /game/continue` - Continue game with choice
+- `GET /games` - Get user's game history
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- OpenRouter for AI story generation
+- Tailwind CSS for styling
+- React for the frontend framework
 
 ## 🚀 Getting Started
 

@@ -1,19 +1,20 @@
 {
-  "name": "nodejs",
+  "name": "typocalypse",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A narrative typing game with AI-generated stories",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "install-server": "cd server && npm install",
+    "install-client": "cd client && npm install",
+    "install-all": "npm run install-server && npm run install-client",
+    "start:server": "cd server && npm run dev",
+    "start:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start"
   },
-  "keywords": [],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["typing-game", "react", "nodejs", "mongodb", "ai"],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@types/node": "^22.13.11",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "node-fetch": "^3.3.2"
-  }
+  "license": "MIT"
 }
