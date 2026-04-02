@@ -16,13 +16,13 @@ Master the keyboard by navigating a dynamic story that branches with every choic
 
 ```
 Typocalypse/
-├── client/          # React frontend
+├── client/      
 │   ├── src/
 │   │   ├── components/
 │   │   ├── contexts/
 │   │   ├── pages/
 │   │   └── ...
-├── server/          # Node.js backend
+├── server/     
 │   ├── models/
 │   ├── index.js
 │   └── ...
