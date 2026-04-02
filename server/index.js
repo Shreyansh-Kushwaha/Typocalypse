@@ -42,6 +42,16 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Auth routes
 app.post('/auth/signup', [
   body('username').isLength({ min: 3, max: 50 }).withMessage('Username must be 3-50 characters').trim().escape(),
