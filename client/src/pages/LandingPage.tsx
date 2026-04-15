@@ -1,172 +1,198 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Button from '../components/Button';
-import Card from '../components/Card';
 
 const LandingPage: React.FC = () => {
   const { user } = useAuth();
 
+  const brutalShadowLight = "shadow-[8px_8px_0px_0px_#000]";
+  const brutalShadowDark = "dark:shadow-[8px_8px_0px_0px_#facc15]";
+  const brutalHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] dark:hover:shadow-[6px_6px_0px_0px_#facc15]";
+  const brutalActive = "active:translate-x-[8px] active:translate-y-[8px] active:shadow-none dark:active:shadow-none";
+
   const features = [
-    {
-      icon: '⚡',
-      title: 'Fast & Adaptive',
-      description: 'Real-time difficulty adjustment based on your performance',
-    },
-    {
-      icon: '🎯',
-      title: 'Focus Mode',
-      description: 'Distraction-free typing experience for maximum productivity',
-    },
-    {
-      icon: '🏆',
-      title: 'Compete',
-      description: 'Global leaderboard to showcase your typing prowess',
-    },
-    {
-      icon: '📚',
-      title: '7+ Genres',
-      description: 'Fantasy, Horror, Mystery, Romance, Sci-Fi, Nature & more',
-    },
-    {
-      icon: '🎨',
-      title: 'Dark & Light',
-      description: 'Themes optimized for comfort and readability',
-    },
-    {
-      icon: '💾',
-      title: 'Auto-Save',
-      description: 'Your progress is saved automatically',
-    },
+    { icon: '⚡', title: 'Adaptive Engine', description: 'Real-time difficulty adjustment based on WPM.', lightBg: 'bg-cyan-300' },
+    { icon: '🎯', title: 'Focus Protocol', description: 'Distraction-free environment. Just you and the keys.', lightBg: 'bg-pink-300' },
+    { icon: '🏆', title: 'Global Ladder', description: 'Destroy the competition and climb the ranks.', lightBg: 'bg-yellow-300' },
+    { icon: '📚', title: '7+ Sectors', description: 'Horror, Sci-Fi, Mystery, Fantasy, and Custom.', lightBg: 'bg-green-300' },
+    { icon: '🎨', title: 'High Contrast', description: 'Eye-bleedingly cool light and dark themes.', lightBg: 'bg-orange-300' },
+    { icon: '💾', title: 'Auto-Sync', description: 'Progress secured locally and in the cloud.', lightBg: 'bg-purple-300' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-50 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900">
-      {/* Animated Background Glows */}
-      <div className="fixed top-0 right-0 w-96 h-96 bg-indigo-300/20 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-96 h-96 bg-green-300/20 dark:bg-green-600/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black overflow-x-hidden">
+      
+      {/* Background Grid - CSS Pattern for Brutalism */}
+      <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+      {/* Navigation / Header */}
+      <nav className="fixed top-0 w-full z-50 border-b-4 border-black dark:border-yellow-400 bg-[#f4f4f0] dark:bg-black">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2">
+            <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1 border-2 border-black dark:border-yellow-400">T</span>
+            Typocalypse
+          </div>
+          {user && (
+            <div className="font-mono font-bold text-sm bg-green-300 dark:bg-black border-2 border-black dark:border-yellow-400 px-3 py-1 text-black dark:text-yellow-400">
+              STATUS: ONLINE
+            </div>
+          )}
+        </div>
+      </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 min-h-screen flex items-center justify-center py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          {/* Headline */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight">
-            <span className="bg-gradient-to-r from-indigo-600 via-slate-900 to-slate-900 dark:from-indigo-300 dark:via-slate-100 dark:to-slate-100 bg-clip-text text-transparent">
-              Master Your Typing, Conquer Stories
-            </span>
+      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center py-32 px-6">
+        <div className="max-w-4xl mx-auto text-center space-y-10">
+          
+          {/* Aggressive Headline */}
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter leading-[0.9]">
+            Type.<br />
+            <span className="inline-block bg-black text-white dark:bg-yellow-400 dark:text-black px-6 py-2 border-4 border-black dark:border-yellow-400 transform -rotate-2 mt-2 shadow-[12px_12px_0px_0px_#ff007f] dark:shadow-[12px_12px_0px_0px_#fff]">
+              Survive.
+            </span><br />
+            Repeat.
           </h1>
 
-          {/* Subtext */}
-          <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed mx-auto">
-            An immersive typing adventure where every word brings you closer to victory.
+          <p className="font-mono text-xl md:text-2xl font-bold max-w-2xl mx-auto bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-4 shadow-[6px_6px_0px_0px_#000] dark:shadow-[6px_6px_0px_0px_#facc15]">
+            An immersive typing protocol where every keystroke alters the narrative.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8">
             {user ? (
               <Link to="/dashboard" className="w-full sm:w-auto">
-                <Button size="lg" variant="primary" className="w-full sm:w-auto">
-                  🎮 Go to Dashboard
-                </Button>
+                <button className={`w-full bg-cyan-400 dark:bg-yellow-400 text-black border-4 border-black font-black text-2xl px-10 py-5 uppercase transition-all ${brutalShadowLight} dark:shadow-[8px_8px_0px_0px_#fff] ${brutalHover} ${brutalActive}`}>
+                  ACCESS DASHBOARD →
+                </button>
               </Link>
             ) : (
               <>
                 <Link to="/signup" className="w-full sm:w-auto">
-                  <Button size="lg" variant="primary" className="w-full sm:w-auto">
-                    🎮 Start Playing
-                  </Button>
+                  <button className={`w-full bg-pink-500 dark:bg-yellow-400 text-black border-4 border-black font-black text-2xl px-10 py-5 uppercase transition-all ${brutalShadowLight} dark:shadow-[8px_8px_0px_0px_#fff] ${brutalHover} ${brutalActive}`}>
+                    INITIALIZE GAME →
+                  </button>
                 </Link>
                 <Link to="/login" className="w-full sm:w-auto">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                    📖 Login
-                  </Button>
+                  <button className={`w-full bg-white dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-yellow-400 font-black text-2xl px-10 py-5 uppercase transition-all ${brutalShadowLight} ${brutalShadowDark} ${brutalHover} ${brutalActive}`}>
+                    AUTHENTICATE
+                  </button>
                 </Link>
               </>
             )}
           </div>
 
-          {/* Demo/Preview Section */}
-          <div className="mt-16 w-full max-w-2xl">
-            <Card className="p-6 space-y-3">
-              <div className="text-left space-y-3">
-                <div className="text-slate-400 dark:text-slate-500 font-mono text-sm">
-                  ▌ The ancient dragon landed softly on the mountain peaks...
+          {/* Terminal Faux-Preview */}
+          <div className={`mt-20 w-full max-w-3xl mx-auto border-4 border-black dark:border-yellow-400 bg-black text-left ${brutalShadowLight} ${brutalShadowDark}`}>
+            {/* Terminal Header */}
+            <div className="bg-gray-200 dark:bg-yellow-400 border-b-4 border-black dark:border-yellow-400 p-2 flex gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-black bg-red-500" />
+              <div className="w-4 h-4 rounded-full border-2 border-black bg-yellow-500" />
+              <div className="w-4 h-4 rounded-full border-2 border-black bg-green-500" />
+              <span className="ml-4 font-mono text-xs font-bold uppercase text-black">Typocalypse.exe</span>
+            </div>
+            {/* Terminal Body */}
+              <div className="p-6 md:p-8 font-mono text-lg md:text-xl space-y-4">
+                <div className="text-gray-500 line-through decoration-red-500 decoration-4">
+                  &gt; The ancient dragon landed sftly...
                 </div>
-                <div className="text-green-600 dark:text-green-400 font-mono text-sm">
-                  The ancient dragon landed softly on the mountain peaks
+                <div className="text-white">
+                  <span className="text-green-400">&gt; The ancient dragon landed softly</span><span className="animate-pulse bg-white text-black">_</span>
                 </div>
+              <div className="pt-6 border-t-2 border-dashed border-gray-700 flex justify-between text-xs md:text-sm text-cyan-400 font-bold uppercase">
+                <span>WPM: 114</span>
+                <span>ERRORS: 1</span>
+                <span>SYS_STABLE</span>
               </div>
-            </Card>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 text-center">
-              WPM: 68 • Accuracy: 98% • Progress: 23/120 words
-            </p>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Features Marquee / Divider */}
+      <div className="border-y-4 border-black dark:border-yellow-400 bg-yellow-300 dark:bg-black overflow-hidden py-3 flex whitespace-nowrap">
+        <div className="animate-marquee font-black uppercase text-xl text-black dark:text-yellow-400 tracking-widest flex gap-8">
+          <span>WARNING: HIGH SPEED REQUIRED</span> • <span>NO MERCY FOR TYPOS</span> • <span>ADAPT OR FAIL</span> • <span>WARNING: HIGH SPEED REQUIRED</span> • <span>NO MERCY FOR TYPOS</span> • <span>ADAPT OR FAIL</span> •
+        </div>
+      </div>
+
       {/* Features Section */}
-      <section className="relative z-10 py-20 px-6 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-              Why Typocalypse?
+      <section className="relative z-10 py-24 px-6 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-16 border-l-8 border-black dark:border-yellow-400 pl-6">
+            <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter text-black dark:text-yellow-400">
+              System Specs
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400">
-              Everything you need for an immersive typing experience
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, idx) => (
-              <Card key={idx} variant="elevated" className="p-6 text-center space-y-3">
-                <div className="text-4xl">{feature.icon}</div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <div 
+                key={idx} 
+                className={`p-8 border-4 border-black dark:border-yellow-400 ${feature.lightBg} dark:bg-black ${brutalShadowLight} ${brutalShadowDark} hover:-translate-y-2 transition-transform duration-200`}
+              >
+                <div className="text-5xl mb-6 bg-white dark:bg-black border-4 border-black dark:border-yellow-400 w-20 h-20 flex items-center justify-center transform -rotate-3">
+                  {feature.icon}
+                </div>
+                <h3 className="text-2xl font-black uppercase text-black dark:text-yellow-400 mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="font-mono font-bold text-black dark:text-yellow-400 border-t-2 border-black dark:border-yellow-400 pt-3">
                   {feature.description}
                 </p>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="relative z-10 py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center space-y-6 bg-gradient-to-r from-indigo-500 to-green-500 rounded-2xl p-12 text-white shadow-xl">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Ready to type? Start your adventure now!
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {user ? (
-              <Link to="/dashboard" className="w-full sm:w-auto">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto bg-white dark:bg-slate-100 text-indigo-600 hover:bg-slate-50">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link to="/signup" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto bg-white dark:bg-slate-100 text-indigo-600 hover:bg-slate-50">
-                    Sign Up Free
-                  </Button>
-                </Link>
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto border-white text-white hover:bg-white/10">
-                  Play Demo
-                </Button>
-              </>
-            )}
+      {/* Massive CTA Section */}
+      <section className="py-24 px-6 bg-orange-500 dark:bg-yellow-400 flex flex-col items-center text-center">
+        <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-black mb-8 border-b-8 border-black pb-4">
+          DO YOU HAVE <br/> WHAT IT TAKES?
+        </h2>
+        
+        {user ? (
+          <Link to="/dashboard">
+            <button className={`bg-white text-black border-4 border-black font-black text-3xl px-12 py-6 uppercase transition-all shadow-[10px_10px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[8px_8px_0px_0px_#000] active:translate-x-[10px] active:translate-y-[10px] active:shadow-none`}>
+              RETURN TO BATTLE
+            </button>
+          </Link>
+        ) : (
+          <div className="flex flex-col md:flex-row gap-6">
+            <Link to="/signup">
+              <button className={`bg-black text-white dark:bg-black dark:text-yellow-400 border-4 border-black font-black text-2xl md:text-3xl px-12 py-6 uppercase transition-all shadow-[10px_10px_0px_0px_#fff] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[8px_8px_0px_0px_#fff] active:translate-x-[10px] active:translate-y-[10px] active:shadow-none`}>
+                CREATE ACCOUNT
+              </button>
+            </Link>
+            <button className={`bg-white text-black border-4 border-black font-black text-xl md:text-2xl px-8 py-6 uppercase transition-all shadow-[10px_10px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[8px_8px_0px_0px_#000] active:translate-x-[10px] active:translate-y-[10px] active:shadow-none`}>
+              GUEST MODE
+            </button>
           </div>
-        </div>
+        )}
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-8 px-6">
-        <div className="max-w-5xl mx-auto text-center text-slate-600 dark:text-slate-400">
-          <p>© 2026 Typocalypse. Master typing, craft stories, conquer challenges.</p>
+      {/* Brutalist Footer */}
+      <footer className="bg-[#f4f4f0] dark:bg-black border-t-8 border-black dark:border-yellow-400 py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-3xl font-black uppercase tracking-tighter text-black dark:text-yellow-400">
+            Typocalypse.
+          </div>
+          <div className="font-mono font-bold text-sm text-black dark:text-yellow-400 border-2 border-black dark:border-yellow-400 p-2 text-center">
+            © 2026 // ALL RIGHTS RESERVED // KEEP TYPING
+          </div>
         </div>
       </footer>
+      
+      {/* Global CSS for Marquee Animation - add to your globals.css if not present */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 15s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };

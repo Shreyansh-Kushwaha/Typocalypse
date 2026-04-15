@@ -1,9 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Button from '../components/Button';
-import Card from '../components/Card';
-import Badge from '../components/Badge';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -14,140 +11,142 @@ const Dashboard: React.FC = () => {
     navigate('/');
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500/30">
-      {/* Refined Background Glow */}
-      <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/10 dark:bg-purple-500/5 blur-[120px] pointer-events-none" />
+  // Brutalist hard shadow definitions for reusability
+  const brutalShadowLight = "shadow-[6px_6px_0px_0px_#000]";
+  const brutalShadowDark = "dark:shadow-[6px_6px_0px_0px_#facc15]";
+  const brutalHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#000] dark:hover:shadow-[4px_4px_0px_0px_#facc15]";
+  const brutalActive = "active:translate-x-[6px] active:translate-y-[6px] active:shadow-none dark:active:shadow-none";
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/70 dark:bg-[#0B1120]/70 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/60">
+  return (
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black pb-20">
+      
+      {/* Header - Stark & Geometric */}
+      <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-black dark:bg-yellow-400 flex items-center justify-center text-[#f4f4f0] dark:text-black font-black text-xl border-2 border-black dark:border-yellow-400">
               T
             </div>
-            <h1 className="text-xl font-bold tracking-tight">
+            <h1 className="text-2xl font-black uppercase tracking-tighter">
               Typocalypse
             </h1>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-3 border-2 border-black dark:border-yellow-400 px-3 py-1 bg-white dark:bg-black">
+              <div className="w-3 h-3 bg-green-500 border border-black dark:border-yellow-400 animate-pulse" />
+              <span className="text-sm font-bold uppercase font-mono text-black dark:text-yellow-400">
                 {user?.username || 'Diana'}
               </span>
             </div>
-            <Button
+            <button
               onClick={handleLogout}
-              variant="tertiary"
-              size="sm"
-              className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className={`px-4 py-2 bg-white dark:bg-black border-2 border-black dark:border-yellow-400 font-bold uppercase text-xs transition-all ${brutalHover} ${brutalActive}`}
             >
               Logout
-            </Button>
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-10 space-y-12">
+      <main className="max-w-6xl mx-auto px-6 py-12 space-y-16">
         
-        {/* Welcome Section */}
-        <div className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{user?.username || 'Diana'}</span> 👋
+        {/* Welcome Section - Aggressive Typography */}
+        <div className="space-y-4">
+          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none text-black dark:text-yellow-400">
+            Welcome Back, <br />
+            <span className="inline-block mt-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-4 py-1 border-4 border-black dark:border-yellow-400 transform -rotate-2">
+              {user?.username || 'Diana'}
+            </span>
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-lg">
-            Ready to continue your typing adventure?
+          <p className="font-mono text-lg font-bold border-l-4 border-black dark:border-yellow-400 pl-4 text-black dark:text-yellow-400 uppercase">
+            Initialize your next typing sequence.
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Stats Overview - High Contrast Blocks */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { label: 'Games Played', value: '0', sub: 'Start your first game today', icon: '🎮' },
-            { label: 'Best WPM', value: '0', sub: 'Personal best record', icon: '⚡' },
-            { label: 'Accuracy', value: '0%', sub: 'Overall typing accuracy', icon: '🎯' },
+            { label: 'Games Played', value: '0', sub: 'INITIALIZE FIRST MATCH', icon: '🎮', lightBg: 'bg-cyan-300' },
+            { label: 'Best WPM', value: '0', sub: 'PERSONAL RECORD', icon: '⚡', lightBg: 'bg-pink-300' },
+            { label: 'Accuracy', value: '0%', sub: 'PRECISION RATING', icon: '🎯', lightBg: 'bg-yellow-300' },
           ].map((stat, idx) => (
-            <Card 
+            <div 
               key={idx} 
-              className="relative p-6 overflow-hidden border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900/50 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 transition-all duration-300 hover:-translate-y-1 group"
+              className={`relative p-6 border-4 border-black dark:border-yellow-400 ${stat.lightBg} dark:bg-black transition-transform hover:-translate-y-2 ${brutalShadowLight} ${brutalShadowDark}`}
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  <p className="text-sm font-black uppercase text-black dark:text-yellow-400 tracking-widest border-b-2 border-black dark:border-yellow-400 pb-1 inline-block">
                     {stat.label}
                   </p>
-                  <p className="text-4xl font-black text-slate-900 dark:text-white font-mono mt-3 tracking-tighter group-hover:text-indigo-500 transition-colors">
+                  <p className="text-6xl font-black text-black dark:text-yellow-400 font-mono mt-4 tracking-tighter">
                     {stat.value}
                   </p>
                 </div>
-                <div className="text-2xl opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
+                <div className="text-4xl text-black dark:text-yellow-400">
                   {stat.icon}
                 </div>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-500 mt-4 font-medium">
+              <p className="text-xs text-black dark:text-yellow-400 mt-6 font-bold uppercase font-mono bg-white dark:bg-black border-2 border-black dark:border-yellow-400 px-2 py-1 inline-block">
                 {stat.sub}
               </p>
-            </Card>
+            </div>
           ))}
         </div>
 
-        {/* Start Game CTA - Redesigned */}
-        <Card className="relative overflow-hidden border-0 shadow-2xl shadow-indigo-500/10 group">
-          {/* Subtle elegant gradient instead of harsh green */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-700 to-slate-900 opacity-90" />
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+        {/* Start Game CTA - Massive & Loud */}
+        <div className={`relative border-4 border-black dark:border-yellow-400 bg-orange-500 dark:bg-yellow-400 ${brutalShadowLight} dark:shadow-[8px_8px_0px_0px_#facc15] p-10 md:p-16 flex flex-col items-center text-center`}>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 pointer-events-none mix-blend-multiply dark:mix-blend-color-burn" />
           
-          <div className="relative p-10 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 text-white">
-            <div className="space-y-3 text-center md:text-left">
-              <h3 className="text-3xl font-bold tracking-tight">Ready for a new challenge?</h3>
-              <p className="text-indigo-100/80 text-lg max-w-lg">
-                Select a genre, warm up your fingers, and immerse yourself in your next typing adventure.
-              </p>
-            </div>
-            <Link to="/genre-selection" className="shrink-0">
-              <Button
-                size="lg"
-                className="bg-white text-indigo-900 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all duration-200 font-bold px-8 py-4 shadow-xl shadow-black/20"
-              >
-                <span className="flex items-center gap-2">
-                  🎮 Start New Game
-                </span>
-              </Button>
-            </Link>
-          </div>
-        </Card>
-
-        {/* Recent Games Section */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold tracking-tight">
-              Recent Games
+          <div className="relative z-10 space-y-8">
+            <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black">
+              Ready for a new challenge?
             </h3>
-            <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-none">
-              None yet
-            </Badge>
-          </div>
-          <Card className="p-10 text-center space-y-5 border-2 border-dashed border-slate-200 dark:border-slate-800 bg-transparent shadow-none flex flex-col items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-2xl mb-2">
-              ⌨️
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              Your match history is looking a little empty. Jump in and set your first record!
+            <p className="text-black font-mono font-bold text-lg md:text-xl max-w-2xl mx-auto bg-white/80 dark:bg-black/10 border-2 border-black px-4 py-2">
+              Select a genre. Warm up your fingers. Destroy the keyboard.
             </p>
-            <Link to="/genre-selection">
-              <Button variant="primary" className="bg-slate-900 dark:bg-white dark:text-slate-900 hover:opacity-90 transition-opacity">
-                Play Your First Game
-              </Button>
+            
+            <Link to="/genre-selection" className="inline-block mt-4">
+              <button
+                className={`bg-white dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-black font-black text-2xl px-10 py-5 uppercase transition-all shadow-[8px_8px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] active:translate-x-[8px] active:translate-y-[8px] active:shadow-none`}
+              >
+                🎮 Start New Game
+              </button>
             </Link>
-          </Card>
+          </div>
         </div>
 
-        {/* Achievements Section */}
-        <div className="space-y-5 pb-10">
-          <h3 className="text-xl font-bold tracking-tight">
+        {/* Recent Games Section - Stark Empty State */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b-4 border-black dark:border-yellow-400 pb-2">
+            <h3 className="text-2xl font-black uppercase tracking-tight text-black dark:text-yellow-400">
+              Match History
+            </h3>
+            <span className="bg-black text-white dark:bg-yellow-400 dark:text-black font-bold uppercase text-xs px-3 py-1">
+              Data: 0
+            </span>
+          </div>
+          
+          <div className="p-12 text-center border-4 border-dashed border-black dark:border-yellow-400 bg-white dark:bg-black flex flex-col items-center justify-center">
+            <div className="text-5xl mb-4 grayscale">⌨️</div>
+            <h4 className="text-2xl font-black uppercase text-black dark:text-yellow-400 mb-2">
+              No Data Found
+            </h4>
+            <p className="font-mono text-black dark:text-yellow-400 font-bold mb-6">
+              Match history is empty. Jump in and set your first record.
+            </p>
+            <Link to="/genre-selection">
+              <button className={`bg-black text-white dark:bg-yellow-400 dark:text-black border-2 border-black dark:border-yellow-400 font-bold uppercase px-6 py-3 transition-all ${brutalHover} ${brutalActive}`}>
+                Play First Game
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Achievements Section - Geometric Grid */}
+        <div className="space-y-6">
+          <h3 className="text-2xl font-black uppercase tracking-tight border-b-4 border-black dark:border-yellow-400 pb-2 text-black dark:text-yellow-400">
             Achievements
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -157,20 +156,20 @@ const Dashboard: React.FC = () => {
               { icon: '🎯', label: 'Accuracy Master' },
               { icon: '🏆', label: 'Champion' },
             ].map((achievement, idx) => (
-              <Card 
+              <div 
                 key={idx} 
-                className="p-6 text-center space-y-3 border border-slate-200 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/20"
+                className={`p-6 text-center border-4 border-black dark:border-yellow-400 bg-gray-200 dark:bg-black/50 opacity-80 transition-all hover:opacity-100 ${brutalShadowLight} ${brutalShadowDark}`}
               >
-                <div className="w-12 h-12 mx-auto rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-2xl grayscale opacity-50">
+                <div className="text-4xl mb-4 grayscale opacity-50">
                   {achievement.icon}
                 </div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-500">
+                <p className="font-black uppercase text-black dark:text-yellow-400 text-sm mb-3">
                   {achievement.label}
                 </p>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-200/50 dark:bg-slate-800/50 text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">
-                  <span>🔒</span> Locked
+                <div className="inline-block border-2 border-black dark:border-yellow-400 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1 text-xs font-bold uppercase font-mono">
+                  🔒 Locked
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

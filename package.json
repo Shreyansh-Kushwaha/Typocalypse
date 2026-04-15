@@ -14,7 +14,16 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": ["typing-game", "react", "nodejs", "mongodb", "ai"],
+  "keywords": [
+    "typing-game",
+    "react",
+    "nodejs",
+    "mongodb",
+    "ai"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "framer-motion": "^12.38.0"
+  }
 }

@@ -1,16 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from '../components/Button';
-import Card from '../components/Card';
 
 const genres = [
-  { id: 'fantasy', icon: '⚔️', name: 'FANTASY', description: 'Magical worlds and epic quests' },
-  { id: 'horror', icon: '👻', name: 'HORROR', description: 'Thrilling tales of fear and suspense' },
-  { id: 'sci-fi', icon: '🚀', name: 'SCI-FI', description: 'Future worlds and advanced technology' },
-  { id: 'mystery', icon: '🕵️', name: 'MYSTERY', description: 'Intriguing puzzles and detective stories' },
-  { id: 'adventure', icon: '🗻', name: 'ADVENTURE', description: 'Exciting journeys and exploration' },
-  { id: 'romance', icon: '💔', name: 'ROMANCE', description: 'Stories of love and relationships' },
-  { id: 'custom', icon: '🚧', name: 'CUSTOM', description: 'Coming Soon', disabled: true },
+  { id: 'fantasy', icon: '⚔️', name: 'FANTASY', description: 'Magical worlds & epic quests', lightBg: 'bg-cyan-300' },
+  { id: 'horror', icon: '👻', name: 'HORROR', description: 'Thrilling tales of fear', lightBg: 'bg-purple-400' },
+  { id: 'sci-fi', icon: '🚀', name: 'SCI-FI', description: 'Future worlds & tech', lightBg: 'bg-green-400' },
+  { id: 'mystery', icon: '🕵️', name: 'MYSTERY', description: 'Puzzles & detective stories', lightBg: 'bg-pink-400' },
+  { id: 'adventure', icon: '🗻', name: 'ADVENTURE', description: 'Journeys & exploration', lightBg: 'bg-orange-400' },
+  { id: 'romance', icon: '💔', name: 'ROMANCE', description: 'Love & relationships', lightBg: 'bg-red-400' },
+  { id: 'custom', icon: '🚧', name: 'CUSTOM', description: 'Under Construction', disabled: true, lightBg: 'bg-gray-300' },
 ];
 
 interface GenreCardProps {
@@ -18,97 +16,64 @@ interface GenreCardProps {
   name: string;
   description: string;
   disabled?: boolean;
+  lightBg: string;
   onSelect: () => void;
 }
 
-const GenreCard: React.FC<GenreCardProps> = ({ icon, name, description, disabled, onSelect }) => {
+const brutalShadowLight = "shadow-[6px_6px_0px_0px_#000]";
+const brutalShadowDark = "dark:shadow-[6px_6px_0px_0px_#facc15]";
+const brutalHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#000] dark:hover:shadow-[4px_4px_0px_0px_#facc15]";
+const brutalActive = "active:translate-x-[6px] active:translate-y-[6px] active:shadow-none dark:active:shadow-none";
+
+const GenreCard: React.FC<GenreCardProps> = ({ icon, name, description, disabled, lightBg, onSelect }) => {
+  if (disabled) {
+    return (
+      <div className="relative border-4 border-dashed border-black dark:border-yellow-400/50 bg-gray-200 dark:bg-black opacity-70 cursor-not-allowed p-6 flex flex-col items-center justify-center text-center grayscale">
+        <div className="text-5xl mb-4">{icon}</div>
+        <h3 className="text-xl font-black uppercase text-black dark:text-yellow-400/50 mb-2">{name}</h3>
+        <p className="text-xs font-mono font-bold text-black dark:text-yellow-400/50 mb-4">{description}</p>
+        <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 text-xs font-bold uppercase border-2 border-black dark:border-yellow-400">
+          LOCKED
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <div
-      onClick={!disabled ? onSelect : undefined}
+    <button
+      onClick={onSelect}
       className={`
-        relative rounded-xl border overflow-hidden group cursor-pointer
-        transition-all duration-300
-        ${
-          disabled
-            ? 'opacity-60 cursor-not-allowed border-slate-300 dark:border-slate-600'
-            : 'border-slate-200 dark:border-slate-700 hover:shadow-large hover:-translate-y-2 shadow-light'
-        }
-        bg-white dark:bg-slate-800
+        relative w-full border-4 border-black dark:border-yellow-400 
+        ${lightBg} dark:bg-black 
+        p-0 flex flex-col text-center 
+        transition-all duration-75 
+        ${brutalShadowLight} ${brutalShadowDark}
+        ${brutalHover} ${brutalActive}
+        group
       `}
     >
-      {/* Background Overlay */}
-      <div
-        className={`
-          absolute inset-0
-          bg-gradient-to-br from-indigo-500/10 to-green-500/10
-          dark:from-indigo-500/5 dark:to-green-500/5
-          group-hover:from-indigo-500/20 group-hover:to-green-500/20
-          transition-all pointer-events-none
-        `}
-      />
-
-      {/* Content */}
-      <div className="relative z-10 aspect-square flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="text-5xl group-hover:scale-110 transition-transform">
+      <div className="p-8 flex-grow flex flex-col items-center justify-center border-b-4 border-black dark:border-yellow-400 w-full">
+        <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-200">
           {icon}
         </div>
-
-        <div>
-          <h3
-            className={`
-              text-lg font-bold
-              group-hover:text-indigo-600 dark:group-hover:text-indigo-400
-              transition-colors
-              ${
-                disabled
-                  ? 'text-slate-600 dark:text-slate-400'
-                  : 'text-slate-900 dark:text-white'
-              }
-            `}
-          >
-            {name}
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            {description}
-          </p>
-        </div>
-
-        {disabled && (
-          <span className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-full">
-            Coming Soon 🚧
-          </span>
-        )}
+        <h3 className="text-2xl font-black uppercase text-black dark:text-yellow-400">
+          {name}
+        </h3>
+        <p className="text-sm font-mono font-bold text-black dark:text-yellow-400 mt-2 bg-white/80 dark:bg-yellow-400/10 px-2 py-1 border-2 border-black dark:border-transparent">
+          {description}
+        </p>
       </div>
-
-      {/* Hover Actions */}
-      {!disabled && (
-        <div
-          className={`
-            absolute bottom-0 left-0 right-0
-            bg-gradient-to-t from-slate-900/80 to-transparent
-            p-4 flex gap-2 justify-center
-            opacity-0 group-hover:opacity-100
-            transition-opacity pointer-events-none group-hover:pointer-events-auto
-          `}
-        >
-          <Button size="sm" variant="primary">
-            Play
-          </Button>
-        </div>
-      )}
-
-      {/* Glow Effect */}
-      {!disabled && (
-        <div
-          className="
-            absolute inset-0 rounded-xl
-            opacity-0 group-hover:opacity-100
-            pointer-events-none transition-opacity
-            shadow-[0_0_30px_rgba(99,102,241,0.15)] dark:shadow-[0_0_30px_rgba(129,140,248,0.10)]
-          "
-        />
-      )}
-    </div>
+      
+      {/* Brutalist Button Footer */}
+      <div className="bg-black dark:bg-yellow-400 w-full py-3 flex items-center justify-center gap-2 group-hover:bg-white dark:group-hover:bg-black transition-colors">
+        <span className="font-black uppercase text-white group-hover:text-black dark:text-black dark:group-hover:text-yellow-400 text-lg tracking-widest">
+          INITIATE
+        </span>
+        <span className="text-white group-hover:text-black dark:text-black dark:group-hover:text-yellow-400">
+          →
+        </span>
+      </div>
+    </button>
   );
 };
 
@@ -120,41 +85,38 @@ const GenreSelection: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-50 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900">
-      {/* Background Glows */}
-      <div className="fixed top-0 right-0 w-96 h-96 bg-indigo-300/20 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-96 h-96 bg-green-300/20 dark:bg-green-600/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black pb-20">
+      
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 shadow-soft">
+      <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black uppercase tracking-tighter">
             Typocalypse
           </h1>
-          <Button
-            variant="tertiary"
-            size="sm"
+          <button
             onClick={() => navigate('/dashboard')}
+            className={`px-4 py-2 bg-white dark:bg-black border-2 border-black dark:border-yellow-400 font-bold uppercase text-xs transition-all ${brutalHover} ${brutalActive}`}
           >
-            ← Back to Dashboard
-          </Button>
+            ← Retreat
+          </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-6 py-12 space-y-16">
+        
         {/* Title Section */}
-        <div className="text-center mb-12 space-y-3">
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">
-            Choose Your Adventure
+        <div className="text-center space-y-4">
+          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none inline-block border-4 border-black dark:border-yellow-400 bg-yellow-300 dark:bg-black px-6 py-4 shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_#facc15] transform -rotate-1">
+            Select Protocol
           </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Select a genre and immerse yourself in a unique story filled with typing challenges
+          <p className="font-mono text-lg font-bold text-black dark:text-yellow-400 uppercase mt-8 max-w-2xl mx-auto">
+            Choose your environment. Calibrate your sensors. Survive the narrative.
           </p>
         </div>
 
         {/* Genre Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {genres.map((genre) => (
             <GenreCard
               key={genre.id}
@@ -162,37 +124,44 @@ const GenreSelection: React.FC = () => {
               name={genre.name}
               description={genre.description}
               disabled={genre.disabled}
+              lightBg={genre.lightBg || 'bg-white'}
               onSelect={() => handleGenreSelect(genre.id)}
             />
           ))}
         </div>
 
-        {/* Info Section */}
-        <Card className="p-8 bg-gradient-to-r from-indigo-50 to-green-50 dark:from-indigo-950/30 dark:to-green-950/30 border-indigo-200 dark:border-indigo-800">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-            How It Works
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <div className="text-2xl mb-2">📖</div>
-              <p className="text-sm text-slate-700 dark:text-slate-300">
-                <span className="font-semibold">Read the Story</span> - Beautiful narratives tailored to each genre
+        {/* Info Section - High Contrast Grid */}
+        <div className={`mt-16 border-4 border-black dark:border-yellow-400 bg-white dark:bg-black ${brutalShadowLight} ${brutalShadowDark}`}>
+          <div className="border-b-4 border-black dark:border-yellow-400 bg-black dark:bg-yellow-400 p-4">
+            <h3 className="text-xl font-black text-white dark:text-black uppercase tracking-widest">
+              SYSTEM MECHANICS
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y-4 md:divide-y-0 md:divide-x-4 divide-black dark:divide-yellow-400">
+            <div className="p-8 flex flex-col items-center text-center hover:bg-cyan-100 dark:hover:bg-yellow-400/10 transition-colors">
+              <div className="text-5xl mb-4">📖</div>
+              <p className="text-black dark:text-yellow-400 font-mono text-sm uppercase font-bold">
+                <span className="block text-lg font-black mb-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1">Process Data</span> 
+                Read the narrative prompts tailored to your selected sector.
               </p>
             </div>
-            <div>
-              <div className="text-2xl mb-2">⌨️</div>
-              <p className="text-sm text-slate-700 dark:text-slate-300">
-                <span className="font-semibold">Type Accurately</span> - Test your typing speed and precision
+            <div className="p-8 flex flex-col items-center text-center hover:bg-pink-100 dark:hover:bg-yellow-400/10 transition-colors">
+              <div className="text-5xl mb-4">⌨️</div>
+              <p className="text-black dark:text-yellow-400 font-mono text-sm uppercase font-bold">
+                <span className="block text-lg font-black mb-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1">Input Commands</span> 
+                Type accurately to survive. Errors equal system failure.
               </p>
             </div>
-            <div>
-              <div className="text-2xl mb-2">🎯</div>
-              <p className="text-sm text-slate-700 dark:text-slate-300">
-                <span className="font-semibold">Make Choices</span> - Your decisions shape the story's outcome
+            <div className="p-8 flex flex-col items-center text-center hover:bg-green-100 dark:hover:bg-yellow-400/10 transition-colors">
+              <div className="text-5xl mb-4">🎯</div>
+              <p className="text-black dark:text-yellow-400 font-mono text-sm uppercase font-bold">
+                <span className="block text-lg font-black mb-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1">Branch Reality</span> 
+                Your speed and choices directly alter the timeline's outcome.
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       </main>
     </div>
   );
