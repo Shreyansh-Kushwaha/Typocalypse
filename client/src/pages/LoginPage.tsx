@@ -28,8 +28,6 @@ const LoginPage: React.FC = () => {
   // Brutalist CSS constants
   const brutalShadowLight = "shadow-[8px_8px_0px_0px_#000]";
   const brutalShadowDark = "dark:shadow-[8px_8px_0px_0px_#facc15]";
-  const brutalHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] dark:hover:shadow-[6px_6px_0px_0px_#facc15]";
-  const brutalActive = "active:translate-x-[8px] active:translate-y-[8px] active:shadow-none dark:active:shadow-none";
 
   return (
     <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black flex items-center justify-center py-12 px-6 relative overflow-hidden">
