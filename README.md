@@ -100,6 +100,11 @@ Typocalypse/
 - **Game Progress**: Save and continue games
 - **Responsive Design**: Works on desktop and mobile
 - **Multiplayer Rooms**: 8 real-time game modes over Socket.IO
+- **Streaming Stories**: the passage you type is written live, token by token (OpenRouter when a key is set, offline passage bank otherwise)
+- **Training Lab**: weak-key keyboard heatmap, an AI typing coach with a rule-based fallback, and drills generated from your worst keys
+- **Global Ladder**: weekly and all-time leaderboards of best clean runs (80%+ accuracy)
+- **Ghost Racing**: every finished passage is recorded keystroke for keystroke - race your past self or share a ghost link
+- **Sound + Juice**: WebAudio synth effects and screen shake, mutable, no audio assets
 
 ## 🎮 Multiplayer
 
@@ -131,7 +136,17 @@ Note for existing deployments: the email unique index is now sparse so guests ca
 ### Game
 - `POST /game/start` - Start a new game
 - `POST /game/continue` - Continue game with choice
+- `POST /game/start-stream` - Start a game with the story streamed over SSE
+- `POST /game/continue-stream` - Continue with a choice, streamed over SSE
 - `GET /games` - Get user's game history
+
+### Progress
+- `POST /stats/session` - Record a finished passage with per-key hit/miss stats
+- `GET /stats/me` - Aggregated stats, weak keys, and WPM history
+- `GET /stats/drill` - A 25 word drill built from your weakest keys
+- `POST /stats/coach` - Coaching text (OpenRouter when configured, rule engine otherwise)
+- `GET /leaderboard?period=weekly|all` - Best clean runs per player
+- `POST /ghosts` / `GET /ghosts/mine` / `GET /ghosts/:id` - Save, list, and fetch keystroke recordings for ghost races
 
 ## 🤝 Contributing
 
