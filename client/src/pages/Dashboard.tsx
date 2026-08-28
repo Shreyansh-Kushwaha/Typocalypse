@@ -180,8 +180,14 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Training + Ladder shortcuts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Daily + Training + Ladder shortcuts */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link to="/daily">
+            <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-orange-300 dark:bg-black cursor-pointer transition-all ${brutalShadowLight} ${brutalShadowDark} ${brutalHover} ${brutalActive}`}>
+              <p className="text-2xl font-black uppercase text-black dark:text-yellow-400">🧟 Daily Apocalypse</p>
+              <p className="font-mono text-sm font-bold text-black dark:text-yellow-400 mt-2">One passage, one attempt, the whole world</p>
+            </div>
+          </Link>
           <Link to="/stats">
             <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-purple-300 dark:bg-black cursor-pointer transition-all ${brutalShadowLight} ${brutalShadowDark} ${brutalHover} ${brutalActive}`}>
               <p className="text-2xl font-black uppercase text-black dark:text-yellow-400">🧪 Training Lab</p>

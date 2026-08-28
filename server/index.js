@@ -14,6 +14,7 @@ import { JWT_SECRET, corsOrigin } from "./config.js";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import progressRoutes from "./routes/progress.js";
+import dailyRoutes from "./routes/daily.js";
 import { streamStory, sse } from "./story.js";
 
 dotenv.config();
@@ -59,6 +60,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/typocalyp
 
 // Stats, coach, leaderboard, and ghost routes
 app.use(progressRoutes);
+app.use(dailyRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -12,6 +12,7 @@ import ClaimAccountPage from './pages/ClaimAccountPage.tsx';
 import StatsPage from './pages/StatsPage.tsx';
 import LeaderboardPage from './pages/LeaderboardPage.tsx';
 import GhostRacePage from './pages/GhostRacePage.tsx';
+import DailyPage from './pages/DailyPage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import GuestGateRoute from './components/GuestGateRoute.tsx';
 
@@ -67,6 +68,11 @@ function App() {
             <Route path="/ghost/:id" element={
               <GuestGateRoute>
                 <GhostRacePage />
+              </GuestGateRoute>
+            } />
+            <Route path="/daily" element={
+              <GuestGateRoute>
+                <DailyPage />
               </GuestGateRoute>
             } />
           </Routes>
