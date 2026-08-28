@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import axios from 'axios';
+import { resetSocket } from '../multiplayer/socket';
 
 interface User {
   id: string;
   username: string;
-  email: string;
+  email?: string;
+  isGuest?: boolean;
 }
 
 interface AuthContextType {
@@ -13,6 +15,8 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
+  guestLogin: () => Promise<void>;
+  claimAccount: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -114,12 +118,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const guestLogin = async () => {
+    try {
+      const response = await axios.post('/auth/guest');
+      const { token: newToken, user: userData } = response.data;
+
+      setToken(newToken);
+      setUser(userData);
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      resetSocket(); // any live socket still carries the previous identity
+    } catch (error: any) {
+      const message = error?.response?.data?.error || error?.message || 'Guest login failed';
+      throw new Error(message);
+    }
+  };
+
+  const claimAccount = async (username: string, email: string, password: string) => {
+    try {
+      const response = await axios.post('/auth/claim', { username, email, password });
+      const { token: newToken, user: userData } = response.data;
+
+      setToken(newToken);
+      setUser(userData);
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      resetSocket(); // reconnect with the claimed identity's token
+    } catch (error: any) {
+      const message = error?.response?.data?.error || error?.message || 'Could not claim account';
+      throw new Error(message);
+    }
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
+    resetSocket();
   };
 
   const value: AuthContextType = {
@@ -127,6 +166,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     login,
     signup,
+    guestLogin,
+    claimAccount,
     logout,
     loading,
   };

@@ -8,6 +8,7 @@ import GamePage from './pages/GamePage.tsx';
 import GenreSelection from './pages/GenreSelection.tsx';
 import MultiplayerHub from './pages/MultiplayerHub.tsx';
 import RoomPage from './pages/RoomPage.tsx';
+import ClaimAccountPage from './pages/ClaimAccountPage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
 function App() {
@@ -42,6 +43,11 @@ function App() {
             <Route path="/room/:code" element={
               <ProtectedRoute>
                 <RoomPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/claim" element={
+              <ProtectedRoute>
+                <ClaimAccountPage />
               </ProtectedRoute>
             } />
           </Routes>

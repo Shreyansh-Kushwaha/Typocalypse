@@ -1,9 +1,24 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const LandingPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, guestLogin } = useAuth();
+  const navigate = useNavigate();
+  const [guestBusy, setGuestBusy] = useState(false);
+  const [guestError, setGuestError] = useState('');
+
+  const handleGuest = async () => {
+    setGuestBusy(true);
+    setGuestError('');
+    try {
+      await guestLogin();
+      navigate('/dashboard');
+    } catch (err: any) {
+      setGuestError(err?.message || 'Guest login failed');
+      setGuestBusy(false);
+    }
+  };
 
   const brutalShadowLight = "shadow-[8px_8px_0px_0px_#000]";
   const brutalShadowDark = "dark:shadow-[8px_8px_0px_0px_#facc15]";
@@ -164,10 +179,19 @@ const LandingPage: React.FC = () => {
                 CREATE ACCOUNT
               </button>
             </Link>
-            <button className={`bg-white text-black border-4 border-black font-black text-xl md:text-2xl px-8 py-6 uppercase transition-all shadow-[10px_10px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[8px_8px_0px_0px_#000] active:translate-x-[10px] active:translate-y-[10px] active:shadow-none`}>
-              GUEST MODE
+            <button
+              onClick={handleGuest}
+              disabled={guestBusy}
+              className={`bg-white text-black border-4 border-black font-black text-xl md:text-2xl px-8 py-6 uppercase transition-all shadow-[10px_10px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[8px_8px_0px_0px_#000] active:translate-x-[10px] active:translate-y-[10px] active:shadow-none disabled:opacity-50`}
+            >
+              {guestBusy ? 'ENTERING…' : 'GUEST MODE'}
             </button>
           </div>
+        )}
+        {guestError && (
+          <p className="mt-4 font-mono font-bold text-black bg-white border-2 border-black px-3 py-1">
+            {guestError}
+          </p>
         )}
       </section>
 

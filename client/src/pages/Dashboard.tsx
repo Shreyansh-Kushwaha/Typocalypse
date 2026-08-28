@@ -50,6 +50,20 @@ const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12 space-y-16">
+
+        {/* Guest claim banner */}
+        {user?.isGuest && (
+          <div className={`border-4 border-black dark:border-yellow-400 bg-yellow-300 dark:bg-black p-4 flex flex-col md:flex-row items-center justify-between gap-4 ${brutalShadowLight} ${brutalShadowDark}`}>
+            <p className="font-mono font-bold text-black dark:text-yellow-400 uppercase text-sm md:text-base">
+              ⚠ You are playing as a guest. Claim your account to keep this identity and your progress.
+            </p>
+            <Link to="/claim">
+              <button className={`bg-black text-white dark:bg-yellow-400 dark:text-black border-2 border-black dark:border-yellow-400 font-black uppercase px-5 py-2 whitespace-nowrap transition-all ${brutalHover} ${brutalActive}`}>
+                Claim account
+              </button>
+            </Link>
+          </div>
+        )}
         
         {/* Welcome Section - Aggressive Typography */}
         <div className="space-y-4">
