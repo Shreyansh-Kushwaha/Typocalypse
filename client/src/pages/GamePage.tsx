@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { streamStory } from '../stream';
+import { sfx, isMuted, toggleMute } from '../sound';
 
-interface GameState {
-  gameId: string;
-  story: string;
-  choices: string[];
-  progress: number;
-}
+interface KeyStat { h: number; m: number }
 
 const GamePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const genre = searchParams.get('genre') || 'fantasy';
   const navigate = useNavigate();
 
-  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [gameId, setGameId] = useState<string | null>(null);
+  const [story, setStory] = useState('');
+  const [choices, setChoices] = useState<string[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [isStreaming, setIsStreaming] = useState(true);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
   const [wpm, setWpm] = useState(0);
@@ -26,8 +27,13 @@ const GamePage: React.FC = () => {
   const [showChoices, setShowChoices] = useState(false);
   const [loading, setLoading] = useState(true);
   const [timeElapsed, setTimeElapsed] = useState(0);
+  const [muted, setMuted] = useState(isMuted());
+  const [shake, setShake] = useState(false);
 
   const gameRef = useRef<HTMLDivElement>(null);
+  const keyStatsRef = useRef<Record<string, KeyStat>>({});
+  const ghostTimesRef = useRef<number[]>([]);
+  const savedRef = useRef(false);
 
   // Brutalist CSS constants
   const brutalShadowLight = "shadow-[8px_8px_0px_0px_#000]";
@@ -36,21 +42,29 @@ const GamePage: React.FC = () => {
   const brutalActive = "active:translate-x-[8px] active:translate-y-[8px] active:shadow-none dark:active:shadow-none";
 
   useEffect(() => {
-    startNewGame();
+    void runStream('/game/start-stream', { genre });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startNewGame = async () => {
+  const runStream = async (path: string, body: Record<string, unknown>) => {
     try {
-      // Fake delay for the cool loading screen effect (remove in prod if you want it instant)
-      setTimeout(async () => {
-        const response = await axios.post('/game/start', { genre });
-        setGameState(response.data);
+      setIsStreaming(true);
+      setStory('');
+      resetGameState();
+      const result = await streamStory(path, body, (token) => {
         setLoading(false);
-        resetGameState();
-      }, 800);
+        setStory(prev => prev + token);
+      });
+      setGameId(result.gameId || gameId);
+      setStory(result.story);
+      setChoices(result.choices);
+      setProgress(result.progress);
+      setIsStreaming(false);
+      setLoading(false);
+      gameRef.current?.focus();
     } catch (error: any) {
-      console.error('Failed to start game:', error);
-      alert(error?.response?.data?.error || error?.message || 'CRITICAL FAILURE. ABORTING.');
+      console.error('Story stream failed:', error);
+      alert(error?.message || 'CRITICAL FAILURE. ABORTING.');
       navigate('/dashboard');
     }
   };
@@ -66,10 +80,15 @@ const GamePage: React.FC = () => {
     setIsGameActive(false);
     setShowChoices(false);
     setTimeElapsed(0);
+    keyStatsRef.current = {};
+    ghostTimesRef.current = [];
+    savedRef.current = false;
     if (gameRef.current) gameRef.current.focus();
   };
 
-  const words = gameState?.story.split(' ') || [];
+  // While streaming, only complete words are typeable; the tail may still grow.
+  const allWords = story.split(' ').filter(w => w.length > 0);
+  const words = isStreaming && allWords.length > 1 ? allWords.slice(0, -1) : allWords;
 
   useEffect(() => {
     let interval: number;
@@ -91,50 +110,95 @@ const GamePage: React.FC = () => {
 
   useEffect(() => {
     if (totalTyped > 0) {
-      const newAccuracy = Math.max(0, ((totalTyped - errors) / totalTyped) * 100);
-      setAccuracy(Math.round(newAccuracy));
+      setAccuracy(Math.round(Math.max(0, ((totalTyped - errors) / totalTyped) * 100)));
     } else {
       setAccuracy(100);
     }
   }, [totalTyped, errors]);
 
+  const recordKey = (expected: string, correct: boolean) => {
+    const stats = keyStatsRef.current;
+    if (!stats[expected]) stats[expected] = { h: 0, m: 0 };
+    if (correct) stats[expected].h += 1;
+    else stats[expected].m += 1;
+  };
+
+  const finishPassage = () => {
+    setIsGameActive(false);
+    setShowChoices(true);
+    sfx.success();
+    if (savedRef.current || !gameStart) return;
+    savedRef.current = true;
+    const durationMs = Date.now() - gameStart;
+    const minutes = durationMs / 60000;
+    const finalWpm = minutes > 0 ? Math.round((story.length / 5) / minutes) : 0;
+    const finalAcc = totalTyped > 0 ? Math.round(((totalTyped + 1 - errors) / (totalTyped + 1)) * 100) : 100;
+    axios.post('/stats/session', {
+      context: 'solo',
+      mode: genre,
+      wpm: finalWpm,
+      accuracy: finalAcc,
+      errors,
+      totalTyped: totalTyped + 1,
+      durationMs,
+      keyStats: keyStatsRef.current,
+    }).catch(() => {});
+    if (ghostTimesRef.current.length === story.length) {
+      axios.post('/ghosts', {
+        text: story,
+        times: ghostTimesRef.current,
+        wpm: finalWpm,
+        accuracy: finalAcc,
+        genre,
+      }).catch(() => {});
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (!gameState || showChoices) return;
+    if (showChoices) return;
 
     const key = e.key;
     const currentWord = words[currentWordIndex];
     if (!currentWord) return;
 
-    const isLastWord = currentWordIndex === words.length - 1;
-    const expected = currentLetterIndex < currentWord.length ? currentWord[currentLetterIndex] : (isLastWord ? null : ' ');
+    const isLastWord = !isStreaming && currentWordIndex === words.length - 1;
+    const expected = currentLetterIndex < currentWord.length
+      ? currentWord[currentLetterIndex]
+      : (isLastWord ? null : ' ');
 
     if (key.length > 1) return;
-
     if (key === ' ') e.preventDefault();
+    if (expected === null) return;
 
+    let start = gameStart;
     if (!isGameActive && key !== ' ') {
-      setGameStart(Date.now());
+      start = Date.now();
+      setGameStart(start);
       setIsGameActive(true);
     }
+    if (!start) return;
 
     setTotalTyped(prev => prev + 1);
 
     if (key === expected) {
+      recordKey(expected, true);
+      ghostTimesRef.current.push(Date.now() - start);
+      sfx.key();
       if (currentLetterIndex < currentWord.length) {
         setCurrentLetterIndex(prev => prev + 1);
         if (isLastWord && currentLetterIndex === currentWord.length - 1) {
-          setIsGameActive(false);
-          setShowChoices(true);
+          finishPassage();
         }
       } else {
-        if (!isLastWord) {
-          setCurrentWordIndex(prev => prev + 1);
-          setCurrentLetterIndex(0);
-        }
+        setCurrentWordIndex(prev => prev + 1);
+        setCurrentLetterIndex(0);
       }
     } else {
+      recordKey(expected, false);
       setErrors(prev => prev + 1);
-      // Visual error flash on the terminal
+      sfx.error();
+      setShake(true);
+      setTimeout(() => setShake(false), 200);
       if (gameRef.current) {
         gameRef.current.classList.add('bg-red-500/20');
         setTimeout(() => gameRef.current?.classList.remove('bg-red-500/20'), 100);
@@ -142,16 +206,10 @@ const GamePage: React.FC = () => {
     }
   };
 
-  const handleChoiceSelect = async (choice: string) => {
-    if (!gameState) return;
-    try {
-      const response = await axios.post('/game/continue', { gameId: gameState.gameId, choice });
-      setGameState(response.data);
-      resetGameState();
-    } catch (error) {
-      console.error('Failed to continue:', error);
-      alert('NODE CONNECTION FAILED. TRY AGAIN.');
-    }
+  const handleChoiceSelect = (choice: string) => {
+    if (!gameId) return;
+    setLoading(true);
+    void runStream('/game/continue-stream', { gameId, choice });
   };
 
   const renderWord = (word: string, wordIndex: number) => {
@@ -160,7 +218,7 @@ const GamePage: React.FC = () => {
         {word.split('').map((letter, letterIndex) => {
           const isTyped = wordIndex < currentWordIndex || (wordIndex === currentWordIndex && letterIndex < currentLetterIndex);
           const isCurrent = wordIndex === currentWordIndex && letterIndex === currentLetterIndex;
-          
+
           return (
             <span
               key={letterIndex}
@@ -188,7 +246,6 @@ const GamePage: React.FC = () => {
   };
 
   const getTypedText = () => {
-    if (!gameState) return '';
     const completedWords = words.slice(0, currentWordIndex).join(' ');
     const space = completedWords.length > 0 ? ' ' : '';
     const currentPart = words[currentWordIndex]?.substring(0, currentLetterIndex) || '';
@@ -201,7 +258,7 @@ const GamePage: React.FC = () => {
         <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
         <div className={`bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-10 max-w-sm text-center relative z-10 ${brutalShadowLight} ${brutalShadowDark}`}>
           <div className="text-6xl animate-bounce mb-6">⚙️</div>
-          <h2 className="text-2xl font-black uppercase tracking-widest mb-2">Establishing Link...</h2>
+          <h2 className="text-2xl font-black uppercase tracking-widest mb-2">Summoning the story…</h2>
           <p className="font-mono font-bold text-sm bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1 inline-block animate-pulse">
             INITIALIZING {genre.toUpperCase()} PROTOCOL
           </p>
@@ -224,10 +281,22 @@ const GamePage: React.FC = () => {
               {genre}
             </span>
             <span className="font-mono text-sm font-bold bg-white dark:bg-black border-2 border-black dark:border-yellow-400 px-2 hidden sm:inline-block">
-              SECTOR_ACTIVE
+              CHAPTER {progress + 1}
             </span>
+            {isStreaming && (
+              <span className="font-mono text-sm font-bold bg-pink-500 text-white dark:bg-yellow-400 dark:text-black px-2 animate-pulse">
+                ✍ WRITING…
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setMuted(toggleMute())}
+              className="text-2xl border-2 border-black dark:border-yellow-400 px-2 py-1 bg-white dark:bg-black"
+              title={muted ? 'Unmute sounds' : 'Mute sounds'}
+            >
+              {muted ? '🔇' : '🔊'}
+            </button>
             <div className="font-mono text-xl md:text-2xl font-black bg-white dark:bg-black border-4 border-black dark:border-yellow-400 px-4 py-1 shadow-[4px_4px_0px_0px_#000] dark:shadow-[4px_4px_0px_0px_#facc15]">
               ⏱️ {formatTime(timeElapsed)}
             </div>
@@ -243,19 +312,23 @@ const GamePage: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-6 flex flex-col gap-8 relative z-10">
-        
+
         {/* Story Text Area */}
         <div
           ref={gameRef}
           tabIndex={0}
           onKeyDown={handleKeyPress}
           className={`flex-1 bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-6 md:p-10 focus:outline-none transition-colors duration-75 min-h-[300px] flex flex-col
+            ${shake ? 'animate-[typoshake_0.2s_linear]' : ''}
             ${!isGameActive && !showChoices ? 'shadow-[12px_12px_0px_0px_#000] dark:shadow-[12px_12px_0px_0px_#facc15]' : 'shadow-[4px_4px_0px_0px_#000] focus:shadow-[12px_12px_0px_0px_#ff007f] dark:focus:shadow-[12px_12px_0px_0px_#fff]'}
           `}
         >
           {!showChoices ? (
             <div className="leading-relaxed select-none outline-none">
               {words.map((word, index) => renderWord(word, index))}
+              {isStreaming && (
+                <span className="inline-block w-4 h-6 bg-pink-500 dark:bg-yellow-400 animate-pulse align-middle" />
+              )}
             </div>
           ) : (
             <div className="m-auto text-center space-y-6">
@@ -265,13 +338,16 @@ const GamePage: React.FC = () => {
               <p className="font-mono font-bold text-xl bg-black text-white dark:bg-yellow-400 dark:text-black p-2 max-w-md mx-auto">
                 THE NARRATIVE AWAITS YOUR COMMAND. SELECT A PATH.
               </p>
+              <p className="font-mono font-bold text-sm">
+                {wpm} WPM · {accuracy}% — saved to your stats and ghost shelf
+              </p>
             </div>
           )}
 
-          {!isGameActive && !showChoices && gameState && (
+          {!isGameActive && !showChoices && words.length > 0 && (
             <div className="mt-auto pt-8 text-center animate-pulse">
               <span className="font-mono font-black text-lg bg-black text-white dark:bg-yellow-400 dark:text-black px-4 py-2 border-2 border-black dark:border-yellow-400">
-                &gt; SYSTEM IDLE. CLICK HERE & START TYPING.
+                &gt; {isStreaming ? 'THE STORY IS BEING WRITTEN. START TYPING TO CHASE IT.' : 'SYSTEM IDLE. CLICK HERE & START TYPING.'}
               </span>
             </div>
           )}
@@ -320,7 +396,7 @@ const GamePage: React.FC = () => {
                 <span className="font-mono font-bold text-black dark:text-yellow-400">{Math.round(progressPercentage)}%</span>
               </div>
               <div className="w-full h-8 border-4 border-black dark:border-yellow-400 bg-gray-200 dark:bg-black/50 overflow-hidden relative">
-                <div 
+                <div
                   className="h-full bg-black dark:bg-yellow-400 transition-all duration-300 ease-out"
                   style={{ width: `${progressPercentage}%` }}
                 />
@@ -330,14 +406,14 @@ const GamePage: React.FC = () => {
         )}
 
         {/* Choice Buttons */}
-        {showChoices && gameState?.choices && (
+        {showChoices && choices.length > 0 && (
           <div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto w-full pb-12">
-            {gameState.choices.map((choice, index) => (
+            {choices.map((choice, index) => (
               <button
                 key={index}
                 onClick={() => handleChoiceSelect(choice)}
                 className={`
-                  w-full text-left bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-6 md:p-8 
+                  w-full text-left bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-6 md:p-8
                   font-black text-xl md:text-2xl uppercase text-black dark:text-yellow-400
                   transition-all shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_#facc15]
                   hover:bg-cyan-100 dark:hover:bg-yellow-400 dark:hover:text-black
