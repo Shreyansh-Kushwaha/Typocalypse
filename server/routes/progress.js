@@ -1,6 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import { authenticateToken } from '../auth.js';
+import { authenticateToken, optionalAuth } from '../auth.js';
 import StatsSession from '../models/StatsSession.js';
 import Ghost from '../models/Ghost.js';
 import { COMMON_WORDS, JUNK_WORDS, shuffle } from '../multiplayer/content.js';
@@ -251,8 +251,8 @@ router.post('/ghosts', authenticateToken, async (req, res) => {
       accuracy: clamp(accuracy, 0, 100),
       genre: typeof genre === 'string' ? genre.slice(0, 20) : 'fantasy',
     });
-    // keep only the newest N ghosts per user
-    const extras = await Ghost.find({ userId: req.user.userId })
+    // keep only the newest N unpinned ghosts per user - pinned (shared) ones survive
+    const extras = await Ghost.find({ userId: req.user.userId, pinned: { $ne: true } })
       .sort({ createdAt: -1 })
       .skip(MAX_GHOSTS_PER_USER)
       .select('_id');
@@ -285,7 +285,8 @@ router.get('/ghosts/mine', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/ghosts/:id', authenticateToken, async (req, res) => {
+// Public on purpose: challenge links must work before login
+router.get('/ghosts/:id', optionalAuth, async (req, res) => {
   try {
     const ghost = await Ghost.findById(req.params.id);
     if (!ghost) return res.status(404).json({ error: 'Ghost not found' });
@@ -297,8 +298,23 @@ router.get('/ghosts/:id', authenticateToken, async (req, res) => {
       wpm: ghost.wpm,
       accuracy: ghost.accuracy,
       genre: ghost.genre,
-      mine: ghost.userId === req.user.userId,
+      mine: !!req.user && ghost.userId === req.user.userId,
     });
+  } catch (error) {
+    res.status(404).json({ error: 'Ghost not found' });
+  }
+});
+
+// Sharing pins the ghost so the link never dies to pruning
+router.post('/ghosts/:id/pin', authenticateToken, async (req, res) => {
+  try {
+    const ghost = await Ghost.findOne({ _id: req.params.id, userId: req.user.userId });
+    if (!ghost) return res.status(404).json({ error: 'Ghost not found' });
+    if (!ghost.pinned) {
+      ghost.pinned = true;
+      await ghost.save();
+    }
+    res.json({ ok: true });
   } catch (error) {
     res.status(404).json({ error: 'Ghost not found' });
   }

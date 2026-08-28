@@ -13,6 +13,7 @@ import StatsPage from './pages/StatsPage.tsx';
 import LeaderboardPage from './pages/LeaderboardPage.tsx';
 import GhostRacePage from './pages/GhostRacePage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
+import GuestGateRoute from './components/GuestGateRoute.tsx';
 
 function App() {
   return (
@@ -64,9 +65,9 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/ghost/:id" element={
-              <ProtectedRoute>
+              <GuestGateRoute>
                 <GhostRacePage />
-              </ProtectedRoute>
+              </GuestGateRoute>
             } />
           </Routes>
         </div>

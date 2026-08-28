@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { copyGhostLink } from '../share';
 
 interface MySummary { games: number; bestWpm: number; avgWpm: number; avgAccuracy: number; totalTyped: number }
 interface HistoryPoint { wpm: number; accuracy: number; context: string; mode?: string; at: string }
@@ -277,14 +278,27 @@ const Dashboard: React.FC = () => {
               </p>
               <div className="flex flex-wrap gap-3">
                 {ghosts.slice(0, 6).map(g => (
-                  <button
-                    key={g.id}
-                    onClick={() => navigate(`/ghost/${g.id}`)}
-                    className={`text-left border-2 border-black dark:border-yellow-400 px-3 py-2 bg-purple-100 dark:bg-black transition-all ${brutalHover} ${brutalActive}`}
-                  >
-                    <span className="font-black text-black dark:text-yellow-400">👻 {g.wpm} WPM</span>
-                    <span className="font-mono text-xs block text-black/70 dark:text-yellow-400/70">{g.genre} · “{g.preview.slice(0, 28)}…”</span>
-                  </button>
+                  <div key={g.id} className={`border-2 border-black dark:border-yellow-400 bg-purple-100 dark:bg-black`}>
+                    <button
+                      onClick={() => navigate(`/ghost/${g.id}`)}
+                      className="text-left px-3 py-2 block"
+                    >
+                      <span className="font-black text-black dark:text-yellow-400">👻 {g.wpm} WPM</span>
+                      <span className="font-mono text-xs block text-black/70 dark:text-yellow-400/70">{g.genre} · “{g.preview.slice(0, 28)}…”</span>
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        const btn = e.currentTarget;
+                        if (await copyGhostLink(g.id)) {
+                          btn.textContent = '✓ copied';
+                          setTimeout(() => { btn.textContent = '🔗 copy challenge link'; }, 1500);
+                        }
+                      }}
+                      className="w-full border-t-2 border-black dark:border-yellow-400 font-mono text-[11px] font-bold uppercase py-1 text-black dark:text-yellow-400 hover:bg-black hover:text-white dark:hover:bg-yellow-400 dark:hover:text-black"
+                    >
+                      🔗 copy challenge link
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

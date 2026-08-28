@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { streamStory } from '../stream';
 import { sfx, isMuted, toggleMute } from '../sound';
+import { copyGhostLink } from '../share';
 
 interface KeyStat { h: number; m: number }
 
@@ -29,6 +30,9 @@ const GamePage: React.FC = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [muted, setMuted] = useState(isMuted());
   const [shake, setShake] = useState(false);
+  const [ghostId, setGhostId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [streakNow, setStreakNow] = useState<number | null>(null);
 
   const gameRef = useRef<HTMLDivElement>(null);
   const keyStatsRef = useRef<Record<string, KeyStat>>({});
@@ -70,6 +74,8 @@ const GamePage: React.FC = () => {
   };
 
   const resetGameState = () => {
+    setGhostId(null);
+    setCopied(false);
     setCurrentWordIndex(0);
     setCurrentLetterIndex(0);
     setWpm(0);
@@ -142,6 +148,8 @@ const GamePage: React.FC = () => {
       totalTyped: totalTyped + 1,
       durationMs,
       keyStats: keyStatsRef.current,
+    }).then(res => {
+      if (res.data?.streak?.current) setStreakNow(res.data.streak.current);
     }).catch(() => {});
     if (ghostTimesRef.current.length === story.length) {
       axios.post('/ghosts', {
@@ -150,7 +158,7 @@ const GamePage: React.FC = () => {
         wpm: finalWpm,
         accuracy: finalAcc,
         genre,
-      }).catch(() => {});
+      }).then(res => setGhostId(res.data?.id || null)).catch(() => {});
     }
   };
 
@@ -339,8 +347,16 @@ const GamePage: React.FC = () => {
                 THE NARRATIVE AWAITS YOUR COMMAND. SELECT A PATH.
               </p>
               <p className="font-mono font-bold text-sm">
-                {wpm} WPM · {accuracy}% — saved to your stats and ghost shelf
+                {wpm} WPM · {accuracy}%{streakNow ? ` · 🔥 ${streakNow} day streak` : ''} — saved to your stats and ghost shelf
               </p>
+              {ghostId && (
+                <button
+                  onClick={async () => { setCopied(await copyGhostLink(ghostId)); }}
+                  className="font-black uppercase bg-purple-300 dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-yellow-400 px-6 py-3 transition-all shadow-[6px_6px_0px_0px_#000] dark:shadow-[6px_6px_0px_0px_#facc15] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#000] dark:hover:shadow-[4px_4px_0px_0px_#facc15]"
+                >
+                  {copied ? '✓ Link copied — paste it anywhere' : '👻 Copy challenge link'}
+                </button>
+              )}
             </div>
           )}
 

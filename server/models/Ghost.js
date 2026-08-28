@@ -10,6 +10,8 @@ const ghostSchema = new mongoose.Schema({
   wpm: { type: Number, required: true },
   accuracy: { type: Number, required: true },
   genre: { type: String, default: 'fantasy' },
+  // Shared ghosts are pinned so pruning never kills a link someone sent out
+  pinned: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export default mongoose.model('Ghost', ghostSchema);

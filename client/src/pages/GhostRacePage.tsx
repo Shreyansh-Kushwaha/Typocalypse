@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useTypingText } from '../multiplayer/useTypingText';
 import { Panel, Btn, ProgressLane, Tag, useNow, brutal } from '../multiplayer/ui';
 import { sfx } from '../sound';
+import { copyGhostLink } from '../share';
+import { useAuth } from '../contexts/AuthContext';
 
 interface GhostData {
   id: string;
@@ -19,6 +21,8 @@ interface GhostData {
 const GhostRacePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
   const [ghost, setGhost] = useState<GhostData | null>(null);
   const [error, setError] = useState('');
   const [startAt, setStartAt] = useState(0);
@@ -121,10 +125,19 @@ const GhostRacePage: React.FC = () => {
             <p className="font-mono font-bold text-lg" style={{ fontVariantNumeric: 'tabular-nums' }}>
               you {(result.myMs / 1000).toFixed(1)}s · {result.wpm} WPM — ghost {(result.ghostMs / 1000).toFixed(1)}s · {ghost.wpm} WPM
             </p>
-            <div className="flex gap-4 justify-center mt-6">
+            <div className="flex gap-4 justify-center mt-6 flex-wrap">
               <Btn color="bg-green-300" onClick={rematch}>Rematch</Btn>
+              <Btn color="bg-purple-300" onClick={async () => setCopied(await copyGhostLink(ghost.id))}>
+                {copied ? '✓ Copied' : '🔗 Challenge someone else'}
+              </Btn>
               <Btn onClick={() => navigate('/dashboard')}>Done</Btn>
             </div>
+            {user?.isGuest && (
+              <p className="font-mono text-sm font-bold mt-6">
+                Playing as <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-1">{user.username}</span> —{' '}
+                <button className="underline font-black" onClick={() => navigate('/claim')}>claim your account</button> to keep this run
+              </p>
+            )}
           </Panel>
         ) : (
           <RaceText
