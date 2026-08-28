@@ -55,7 +55,8 @@ export function initMultiplayer(httpServer) {
       }
     });
 
-    socket.on('room:leave', (cb) => {
+    socket.on('room:leave', (...args) => {
+      const cb = args.find(a => typeof a === 'function');
       const room = manager.roomOf(socket.data.user.userId);
       if (room) socket.leave(room.code);
       const remaining = manager.leaveCurrent(socket.data.user.userId);
@@ -81,7 +82,8 @@ export function initMultiplayer(httpServer) {
       broadcastRoom(room);
     });
 
-    socket.on('room:start', (cb) => {
+    socket.on('room:start', (...args) => {
+      const cb = args.find(a => typeof a === 'function');
       const room = manager.roomOf(socket.data.user.userId);
       if (!room || room.state !== 'lobby') return cb?.({ ok: false, error: 'No room' });
       if (room.hostUserId !== socket.data.user.userId) {

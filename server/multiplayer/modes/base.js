@@ -68,10 +68,12 @@ export class BaseMode {
   onReconnect(_player) {}
 }
 
-// wpm from a progress report: correct chars / 5 per minute
+// wpm from a progress report: correct chars / 5 per minute.
+// Capped - a client reporting faster than any human is lying.
+const WPM_CAP = 300;
 export function wpmOf(chars, ms) {
   if (!ms || ms <= 0) return 0;
-  return Math.round((chars / 5) / (ms / 60000));
+  return Math.min(WPM_CAP, Math.round((chars / 5) / (ms / 60000)));
 }
 
 export function accOf(chars, errors) {
