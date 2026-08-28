@@ -52,10 +52,9 @@ Typocalypse/
    ```
 
 3. **Configure environment variables**
-   - Copy `.env` file in server directory
-   - Add your MongoDB URI
-   - Add your OpenRouter API key
-   - Set a secure JWT secret
+   - Copy `server/.env.example` to `server/.env`
+   - Set `JWT_SECRET` (required in production - the server refuses to start without it)
+   - Add your MongoDB URI, optional OpenRouter API key, and `CORS_ORIGIN` for deployed clients
 
 4. **Set up the frontend**
    ```bash
@@ -105,6 +104,12 @@ Typocalypse/
 - **Global Ladder**: weekly and all-time leaderboards of best clean runs (80%+ accuracy)
 - **Ghost Racing**: every finished passage is recorded keystroke for keystroke - race your past self or share a ghost link
 - **Sound + Juice**: WebAudio synth effects and screen shake, mutable, no audio assets
+- **Daily Apocalypse**: one seeded passage for the whole world, one attempt, emoji share grid, public daily ladder at `/daily`
+- **Streaks**: day streaks with drill-powered repair, at-risk warnings, and guest-claim hooks
+- **Ghost Challenge Links**: copy a link, recipients auto-guest straight into the race - no login wall; shared ghosts are pinned so links never die
+- **Public Profiles**: `/u/:username` pages with stats, heatmap, and race buttons; the leaderboard is public
+- **Social Cards**: per-route Open Graph meta and rendered 1200x630 PNG cards for ghosts, profiles, and the daily
+- **Hardened**: required JWT secret, rate-limited auth/guest/AI routes, CORS allowlist, helmet
 
 ## 🎮 Multiplayer
 
@@ -145,7 +150,10 @@ Note for existing deployments: the email unique index is now sparse so guests ca
 - `GET /stats/me` - Aggregated stats, weak keys, and WPM history
 - `GET /stats/drill` - A 25 word drill built from your weakest keys
 - `POST /stats/coach` - Coaching text (OpenRouter when configured, rule engine otherwise)
-- `GET /leaderboard?period=weekly|all` - Best clean runs per player
+- `GET /leaderboard?period=weekly|all` - Best clean runs per player (public)
+- `GET /users/:username/public` - Public typist profile
+- `GET /daily` / `POST /daily/result` / `GET /daily/leaderboard` - Daily challenge (one attempt per day)
+- `GET /og/:kind/:id.png` - Social card images
 - `POST /ghosts` / `GET /ghosts/mine` / `GET /ghosts/:id` - Save, list, and fetch keystroke recordings for ghost races
 
 ## 🤝 Contributing
