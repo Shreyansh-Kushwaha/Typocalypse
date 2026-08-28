@@ -9,6 +9,9 @@ import GenreSelection from './pages/GenreSelection.tsx';
 import MultiplayerHub from './pages/MultiplayerHub.tsx';
 import RoomPage from './pages/RoomPage.tsx';
 import ClaimAccountPage from './pages/ClaimAccountPage.tsx';
+import StatsPage from './pages/StatsPage.tsx';
+import LeaderboardPage from './pages/LeaderboardPage.tsx';
+import GhostRacePage from './pages/GhostRacePage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
 function App() {
@@ -48,6 +51,21 @@ function App() {
             <Route path="/claim" element={
               <ProtectedRoute>
                 <ClaimAccountPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/stats" element={
+              <ProtectedRoute>
+                <StatsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/leaderboard" element={
+              <ProtectedRoute>
+                <LeaderboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/ghost/:id" element={
+              <ProtectedRoute>
+                <GhostRacePage />
               </ProtectedRoute>
             } />
           </Routes>

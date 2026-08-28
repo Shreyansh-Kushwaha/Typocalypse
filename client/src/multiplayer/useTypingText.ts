@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { sfx } from '../sound';
 
 interface Options {
   enabled: boolean;
   onDone?: (stats: { chars: number; errors: number }) => void;
   onTypo?: () => void;
+  /** called for every keystroke with the expected char and whether it was hit */
+  onKey?: (expected: string, correct: boolean) => void;
   report?: (p: { chars: number; errors: number; done: boolean }) => void;
   reportMs?: number;
   /** remap incoming keys (used by Corruptor sticky-keys sabotage) */
   keymap?: (key: string) => string;
+  /** change to force a reset without changing the text (rematches) */
+  resetKey?: unknown;
 }
 
 // Core typing engine for passage-based modes. Tracks correct chars and
@@ -27,7 +32,7 @@ export function useTypingText(text: string, opts: Options) {
     setDone(false);
     stateRef.current = { pos: 0, errors: 0, done: false };
     lastReport.current = 0;
-  }, [text]);
+  }, [text, opts.resetKey]);
 
   const report = useCallback((force: boolean) => {
     const o = optsRef.current;
@@ -48,7 +53,10 @@ export function useTypingText(text: string, opts: Options) {
     if (key.length > 1) return;
     if (o.keymap) key = o.keymap(key);
 
-    if (key === text[s.pos]) {
+    const expected = text[s.pos];
+    if (key === expected) {
+      o.onKey?.(expected, true);
+      sfx.key();
       s.pos += 1;
       setPos(s.pos);
       if (s.pos >= text.length) {
@@ -59,6 +67,8 @@ export function useTypingText(text: string, opts: Options) {
         return;
       }
     } else {
+      o.onKey?.(expected, false);
+      sfx.error();
       s.errors += 1;
       setErrors(s.errors);
       o.onTypo?.();

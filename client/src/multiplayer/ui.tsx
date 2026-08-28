@@ -54,17 +54,29 @@ export const TypingText: React.FC<{
   onKeyDown: (e: React.KeyboardEvent) => void;
   className?: string;
   disabled?: boolean;
-}> = ({ text, pos, onKeyDown, className = '', disabled }) => {
+  /** pass the hook's error count - the box shakes when it increases */
+  shakeOn?: number;
+}> = ({ text, pos, onKeyDown, className = '', disabled, shakeOn }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [shaking, setShaking] = useState(false);
+  const lastShake = useRef(shakeOn ?? 0);
   useEffect(() => {
     if (!disabled) ref.current?.focus();
   }, [disabled, text]);
+  useEffect(() => {
+    if (shakeOn !== undefined && shakeOn !== lastShake.current) {
+      lastShake.current = shakeOn;
+      setShaking(true);
+      const t = setTimeout(() => setShaking(false), 200);
+      return () => clearTimeout(t);
+    }
+  }, [shakeOn]);
   return (
     <div
       ref={ref}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className={`font-mono text-lg md:text-xl leading-relaxed outline-none select-none p-4 bg-white dark:bg-black ${brutal.border} focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] ${className}`}
+      className={`font-mono text-lg md:text-xl leading-relaxed outline-none select-none p-4 bg-white dark:bg-black ${brutal.border} ${shaking ? 'animate-[typoshake_0.2s_linear]' : ''} focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] ${className}`}
     >
       {text.split('').map((ch, i) => (
         <span

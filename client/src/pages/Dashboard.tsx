@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+
+interface MySummary { games: number; bestWpm: number; avgWpm: number; avgAccuracy: number; totalTyped: number }
+interface HistoryPoint { wpm: number; accuracy: number; context: string; mode?: string; at: string }
+interface GhostRow { id: string; wpm: number; accuracy: number; genre: string; preview: string; at: string }
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [summary, setSummary] = useState<MySummary | null>(null);
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [ghosts, setGhosts] = useState<GhostRow[]>([]);
+
+  useEffect(() => {
+    axios.get('/stats/me').then(res => {
+      setSummary(res.data.summary);
+      setHistory(res.data.history);
+    }).catch(() => {});
+    axios.get('/ghosts/mine').then(res => setGhosts(res.data)).catch(() => {});
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -81,9 +97,9 @@ const Dashboard: React.FC = () => {
         {/* Stats Overview - High Contrast Blocks */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { label: 'Games Played', value: '0', sub: 'INITIALIZE FIRST MATCH', icon: '🎮', lightBg: 'bg-cyan-300' },
-            { label: 'Best WPM', value: '0', sub: 'PERSONAL RECORD', icon: '⚡', lightBg: 'bg-pink-300' },
-            { label: 'Accuracy', value: '0%', sub: 'PRECISION RATING', icon: '🎯', lightBg: 'bg-yellow-300' },
+            { label: 'Games Played', value: String(summary?.games ?? 0), sub: summary?.games ? 'PASSAGES COMPLETED' : 'INITIALIZE FIRST MATCH', icon: '🎮', lightBg: 'bg-cyan-300' },
+            { label: 'Best WPM', value: String(summary?.bestWpm ?? 0), sub: `AVG ${summary?.avgWpm ?? 0} WPM`, icon: '⚡', lightBg: 'bg-pink-300' },
+            { label: 'Accuracy', value: `${summary?.avgAccuracy ?? 0}%`, sub: 'LAST 20 PASSAGES', icon: '🎯', lightBg: 'bg-yellow-300' },
           ].map((stat, idx) => (
             <div 
               key={idx} 
@@ -140,31 +156,116 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Games Section - Stark Empty State */}
+        {/* Training + Ladder shortcuts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link to="/stats">
+            <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-purple-300 dark:bg-black cursor-pointer transition-all ${brutalShadowLight} ${brutalShadowDark} ${brutalHover} ${brutalActive}`}>
+              <p className="text-2xl font-black uppercase text-black dark:text-yellow-400">🧪 Training Lab</p>
+              <p className="font-mono text-sm font-bold text-black dark:text-yellow-400 mt-2">Weak-key heatmap · AI coach · targeted drills</p>
+            </div>
+          </Link>
+          <Link to="/leaderboard">
+            <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-green-300 dark:bg-black cursor-pointer transition-all ${brutalShadowLight} ${brutalShadowDark} ${brutalHover} ${brutalActive}`}>
+              <p className="text-2xl font-black uppercase text-black dark:text-yellow-400">🏆 Global Ladder</p>
+              <p className="font-mono text-sm font-bold text-black dark:text-yellow-400 mt-2">Weekly and all-time best clean runs</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Match history - real data */}
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b-4 border-black dark:border-yellow-400 pb-2">
             <h3 className="text-2xl font-black uppercase tracking-tight text-black dark:text-yellow-400">
               Match History
             </h3>
             <span className="bg-black text-white dark:bg-yellow-400 dark:text-black font-bold uppercase text-xs px-3 py-1">
-              Data: 0
+              Data: {summary?.games ?? 0}
             </span>
           </div>
-          
-          <div className="p-12 text-center border-4 border-dashed border-black dark:border-yellow-400 bg-white dark:bg-black flex flex-col items-center justify-center">
-            <div className="text-5xl mb-4 grayscale">⌨️</div>
-            <h4 className="text-2xl font-black uppercase text-black dark:text-yellow-400 mb-2">
-              No Data Found
-            </h4>
-            <p className="font-mono text-black dark:text-yellow-400 font-bold mb-6">
-              Match history is empty. Jump in and set your first record.
-            </p>
-            <Link to="/genre-selection">
-              <button className={`bg-black text-white dark:bg-yellow-400 dark:text-black border-2 border-black dark:border-yellow-400 font-bold uppercase px-6 py-3 transition-all ${brutalHover} ${brutalActive}`}>
-                Play First Game
-              </button>
-            </Link>
-          </div>
+
+          {history.length === 0 ? (
+            <div className="p-12 text-center border-4 border-dashed border-black dark:border-yellow-400 bg-white dark:bg-black flex flex-col items-center justify-center">
+              <div className="text-5xl mb-4 grayscale">⌨️</div>
+              <h4 className="text-2xl font-black uppercase text-black dark:text-yellow-400 mb-2">
+                No Data Found
+              </h4>
+              <p className="font-mono text-black dark:text-yellow-400 font-bold mb-6">
+                Match history is empty. Jump in and set your first record.
+              </p>
+              <Link to="/genre-selection">
+                <button className={`bg-black text-white dark:bg-yellow-400 dark:text-black border-2 border-black dark:border-yellow-400 font-bold uppercase px-6 py-3 transition-all ${brutalHover} ${brutalActive}`}>
+                  Play First Game
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* WPM over recent passages - single series, one axis */}
+              <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-white dark:bg-black ${brutalShadowLight} ${brutalShadowDark}`}>
+                <p className="text-sm font-black uppercase tracking-widest text-black dark:text-yellow-400 mb-4">
+                  WPM — last {history.length} passages
+                </p>
+                <div className="flex items-end gap-[3px] h-32 border-b-2 border-black dark:border-yellow-400">
+                  {(() => {
+                    const maxWpm = Math.max(...history.map(h => h.wpm), 1);
+                    return history.map((h, i) => (
+                      <div
+                        key={i}
+                        title={`${h.wpm} WPM · ${h.accuracy}% · ${h.context}${h.mode ? ` (${h.mode})` : ''}`}
+                        className={`flex-1 min-w-[4px] rounded-t-[4px] transition-all hover:opacity-70 ${h.wpm === maxWpm ? 'bg-pink-500 dark:bg-white' : 'bg-black dark:bg-yellow-400'}`}
+                        style={{ height: `${Math.max(4, (h.wpm / maxWpm) * 100)}%` }}
+                      />
+                    ));
+                  })()}
+                </div>
+                <p className="font-mono text-xs font-bold text-black dark:text-yellow-400 mt-2">
+                  ◼ best run {summary?.bestWpm ?? 0} WPM highlighted · hover a bar for details
+                </p>
+              </div>
+
+              {/* recent passages table */}
+              <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-white dark:bg-black ${brutalShadowLight} ${brutalShadowDark} overflow-x-auto`}>
+                <p className="text-sm font-black uppercase tracking-widest text-black dark:text-yellow-400 mb-4">
+                  Recent passages
+                </p>
+                <table className="w-full font-mono text-sm text-black dark:text-yellow-400" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  <tbody>
+                    {history.slice(-8).reverse().map((h, i) => (
+                      <tr key={i} className="border-b border-black/10 dark:border-yellow-400/10">
+                        <td className="py-1 font-bold uppercase">{h.context}{h.mode && h.mode !== h.context ? ` · ${h.mode}` : ''}</td>
+                        <td className="text-right font-black">{h.wpm} wpm</td>
+                        <td className="text-right">{h.accuracy}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Ghost shelf */}
+          {ghosts.length > 0 && (
+            <div className={`p-6 border-4 border-black dark:border-yellow-400 bg-white dark:bg-black ${brutalShadowLight} ${brutalShadowDark}`}>
+              <p className="text-sm font-black uppercase tracking-widest text-black dark:text-yellow-400 mb-1">
+                👻 Ghost shelf — race your past self
+              </p>
+              <p className="font-mono text-xs font-bold text-black/60 dark:text-yellow-400/60 mb-4">
+                Every finished story passage is recorded keystroke for keystroke. Share a link to make friends race your ghost.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {ghosts.slice(0, 6).map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => navigate(`/ghost/${g.id}`)}
+                    className={`text-left border-2 border-black dark:border-yellow-400 px-3 py-2 bg-purple-100 dark:bg-black transition-all ${brutalHover} ${brutalActive}`}
+                  >
+                    <span className="font-black text-black dark:text-yellow-400">👻 {g.wpm} WPM</span>
+                    <span className="font-mono text-xs block text-black/70 dark:text-yellow-400/70">{g.genre} · “{g.preview.slice(0, 28)}…”</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Achievements Section - Geometric Grid */}
@@ -174,23 +275,25 @@ const Dashboard: React.FC = () => {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: '🎮', label: 'First Game' },
-              { icon: '⚡', label: 'Speed Demon' },
-              { icon: '🎯', label: 'Accuracy Master' },
-              { icon: '🏆', label: 'Champion' },
+              { icon: '🎮', label: 'First Game', unlocked: (summary?.games ?? 0) >= 1 },
+              { icon: '⚡', label: 'Speed Demon', unlocked: (summary?.bestWpm ?? 0) >= 60, hint: '60+ WPM' },
+              { icon: '🎯', label: 'Accuracy Master', unlocked: (summary?.avgAccuracy ?? 0) >= 95 && (summary?.games ?? 0) >= 5, hint: '95% avg' },
+              { icon: '🏆', label: 'Marathon', unlocked: (summary?.games ?? 0) >= 25, hint: '25 passages' },
             ].map((achievement, idx) => (
-              <div 
-                key={idx} 
-                className={`p-6 text-center border-4 border-black dark:border-yellow-400 bg-gray-200 dark:bg-black/50 opacity-80 transition-all hover:opacity-100 ${brutalShadowLight} ${brutalShadowDark}`}
+              <div
+                key={idx}
+                className={`p-6 text-center border-4 border-black dark:border-yellow-400 transition-all ${
+                  achievement.unlocked ? 'bg-yellow-300 dark:bg-black' : 'bg-gray-200 dark:bg-black/50 opacity-80 hover:opacity-100'
+                } ${brutalShadowLight} ${brutalShadowDark}`}
               >
-                <div className="text-4xl mb-4 grayscale opacity-50">
+                <div className={`text-4xl mb-4 ${achievement.unlocked ? '' : 'grayscale opacity-50'}`}>
                   {achievement.icon}
                 </div>
                 <p className="font-black uppercase text-black dark:text-yellow-400 text-sm mb-3">
                   {achievement.label}
                 </p>
                 <div className="inline-block border-2 border-black dark:border-yellow-400 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1 text-xs font-bold uppercase font-mono">
-                  🔒 Locked
+                  {achievement.unlocked ? '✓ Unlocked' : `🔒 ${achievement.hint ?? 'Locked'}`}
                 </div>
               </div>
             ))}
