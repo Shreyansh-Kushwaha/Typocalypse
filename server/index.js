@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "http";
 import fetch from "node-fetch";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -7,6 +8,7 @@ import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import User from "./models/User.js";
 import Game from "./models/Game.js";
+import { initMultiplayer } from "./multiplayer/index.js";
 
 dotenv.config();
 
@@ -373,4 +375,6 @@ async function generateStory(choice, genre = 'fantasy') {
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+const httpServer = createServer(app);
+initMultiplayer(httpServer);
+httpServer.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
