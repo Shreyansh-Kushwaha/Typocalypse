@@ -3,6 +3,8 @@ import fetch from 'node-fetch';
 import { authenticateToken, optionalAuth } from '../auth.js';
 import StatsSession from '../models/StatsSession.js';
 import Ghost from '../models/Ghost.js';
+import User from '../models/User.js';
+import MatchResult from '../models/MatchResult.js';
 import { COMMON_WORDS, JUNK_WORDS, shuffle } from '../multiplayer/content.js';
 import { bumpStreak, getStreak } from '../streaks.js';
 
@@ -191,7 +193,7 @@ router.post('/stats/coach', authenticateToken, async (req, res) => {
 });
 
 // ---- leaderboard ----
-router.get('/leaderboard', authenticateToken, async (req, res) => {
+router.get('/leaderboard', optionalAuth, async (req, res) => {
   try {
     const period = req.query.period === 'weekly' ? 'weekly' : 'all';
     const match = { accuracy: { $gte: 80 } };
@@ -219,7 +221,7 @@ router.get('/leaderboard', authenticateToken, async (req, res) => {
         bestWpm: r.bestWpm,
         avgAccuracy: Math.round(r.avgAccuracy),
         games: r.games,
-        me: r._id === req.user.userId,
+        me: !!req.user && r._id === req.user.userId,
       })),
     });
   } catch (error) {
@@ -317,6 +319,38 @@ router.post('/ghosts/:id/pin', authenticateToken, async (req, res) => {
     res.json({ ok: true });
   } catch (error) {
     res.status(404).json({ error: 'Ghost not found' });
+  }
+});
+
+// ---- public profile ----
+router.get('/users/:username/public', optionalAuth, async (req, res) => {
+  try {
+    const name = String(req.params.username || '').slice(0, 50);
+    const user = await User.findOne({ username: name }).select('_id username createdAt currentStreak longestStreak');
+    if (!user) return res.status(404).json({ error: 'Typist not found' });
+    const userId = String(user._id);
+    const [stats, ghosts, matches] = await Promise.all([
+      loadMyStats(userId),
+      Ghost.find({ userId }).sort({ createdAt: -1 }).limit(5).select('wpm accuracy genre text'),
+      MatchResult.find({ 'players.userId': userId }).sort({ createdAt: -1 }).limit(200).select('mode'),
+    ]);
+    const byMode = {};
+    for (const m of matches) byMode[m.mode] = (byMode[m.mode] || 0) + 1;
+    res.json({
+      username: user.username,
+      joined: user.createdAt,
+      streak: { current: user.currentStreak || 0, longest: user.longestStreak || 0 },
+      summary: stats.summary,
+      weakKeys: stats.weakKeys,
+      keyStats: stats.keyStats,
+      history: stats.history,
+      multiplayer: { matches: matches.length, byMode },
+      ghosts: ghosts.map(g => ({ id: g._id, wpm: g.wpm, accuracy: g.accuracy, genre: g.genre, preview: g.text.slice(0, 60) })),
+      isMe: !!req.user && req.user.userId === userId,
+    });
+  } catch (error) {
+    console.error('Profile error:', error);
+    res.status(500).json({ error: 'Failed to load profile' });
   }
 });
 

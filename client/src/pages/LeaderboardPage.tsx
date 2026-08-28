@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Btn, Panel } from '../multiplayer/ui';
 
@@ -84,7 +84,7 @@ const LeaderboardPage: React.FC = () => {
                       <td className="py-2 pr-2 font-black">
                         {r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}
                       </td>
-                      <td className="font-bold">{r.username}{r.me ? ' (you)' : ''}</td>
+                      <td className="font-bold"><Link to={`/u/${encodeURIComponent(r.username)}`} className="underline decoration-2 underline-offset-2 hover:bg-black hover:text-white dark:hover:bg-yellow-400 dark:hover:text-black">{r.username}</Link>{r.me ? ' (you)' : ''}</td>
                       <td className="text-right font-black">{r.bestWpm}</td>
                       <td className="text-right hidden sm:table-cell">{r.avgAccuracy}%</td>
                       <td className="text-right hidden sm:table-cell">{r.games}</td>

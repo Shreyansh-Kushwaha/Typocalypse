@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useTypingText } from '../multiplayer/useTypingText';
 import { TypingText, Panel, Btn, Tag } from '../multiplayer/ui';
 import { sfx } from '../sound';
+import KeyboardHeatmap from '../components/KeyboardHeatmap';
 
 interface KeyStat { h: number; m: number }
 interface WeakKey { ch: string; attempts: number; missRate: number }
@@ -12,20 +13,6 @@ interface MyStats {
   keyStats: Record<string, KeyStat>;
   weakKeys: WeakKey[];
   history: { wpm: number; accuracy: number; context: string; mode?: string; at: string }[];
-}
-
-const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', "zxcvbnm,.'"];
-
-// fold case so 'E' and 'e' count as one key
-function foldKeyStats(raw: Record<string, KeyStat>): Record<string, KeyStat> {
-  const out: Record<string, KeyStat> = {};
-  for (const [ch, v] of Object.entries(raw)) {
-    const k = ch.toLowerCase();
-    if (!out[k]) out[k] = { h: 0, m: 0 };
-    out[k].h += v.h;
-    out[k].m += v.m;
-  }
-  return out;
 }
 
 const StatsPage: React.FC = () => {
@@ -96,13 +83,6 @@ const StatsPage: React.FC = () => {
     },
   });
 
-  const folded = stats ? foldKeyStats(stats.keyStats) : {};
-  const heat = (ch: string) => {
-    const v = folded[ch];
-    if (!v || v.h + v.m < 5) return null;
-    return { missRate: v.m / (v.h + v.m), attempts: v.h + v.m, misses: v.m };
-  };
-
   return (
     <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans relative pb-16">
       <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
@@ -137,41 +117,7 @@ const StatsPage: React.FC = () => {
             <p className="font-black uppercase text-xs tracking-widest">Weak key heatmap — darker red means more misses</p>
             <span className="font-mono text-[11px] font-bold text-gray-500 dark:text-yellow-400/60">keys with under 5 attempts stay neutral · hover for exact numbers</span>
           </div>
-          <div className="space-y-1.5 overflow-x-auto pb-1">
-            {KEY_ROWS.map((row, ri) => (
-              <div key={ri} className="flex gap-1.5" style={{ paddingLeft: `${ri * 14}px` }}>
-                {row.split('').map(ch => {
-                  const h = heat(ch);
-                  const alpha = h ? Math.min(0.85, h.missRate * 2.5) : 0;
-                  return (
-                    <div
-                      key={ch}
-                      title={h ? `${ch} — ${Math.round(h.missRate * 100)}% missed (${h.misses}/${h.attempts})` : `${ch} — not enough data`}
-                      className="w-9 h-9 md:w-11 md:h-11 border-2 border-black dark:border-yellow-400 flex items-center justify-center font-mono font-black uppercase shrink-0"
-                      style={{ backgroundColor: h ? `rgba(220,38,38,${alpha})` : undefined }}
-                    >
-                      {ch}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-            <div className="flex" style={{ paddingLeft: '56px' }}>
-              {(() => {
-                const h = heat(' ');
-                const alpha = h ? Math.min(0.85, h.missRate * 2.5) : 0;
-                return (
-                  <div
-                    title={h ? `space — ${Math.round(h.missRate * 100)}% missed (${h.misses}/${h.attempts})` : 'space — not enough data'}
-                    className="h-9 md:h-11 w-56 border-2 border-black dark:border-yellow-400 flex items-center justify-center font-mono font-bold text-xs uppercase"
-                    style={{ backgroundColor: h ? `rgba(220,38,38,${alpha})` : undefined }}
-                  >
-                    space
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
+          <KeyboardHeatmap keyStats={stats?.keyStats || {}} />
 
           {stats && stats.weakKeys.length > 0 && (
             <table className="mt-4 font-mono text-sm w-full max-w-md">

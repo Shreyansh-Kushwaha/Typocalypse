@@ -13,6 +13,7 @@ import StatsPage from './pages/StatsPage.tsx';
 import LeaderboardPage from './pages/LeaderboardPage.tsx';
 import GhostRacePage from './pages/GhostRacePage.tsx';
 import DailyPage from './pages/DailyPage.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import GuestGateRoute from './components/GuestGateRoute.tsx';
 
@@ -60,11 +61,8 @@ function App() {
                 <StatsPage />
               </ProtectedRoute>
             } />
-            <Route path="/leaderboard" element={
-              <ProtectedRoute>
-                <LeaderboardPage />
-              </ProtectedRoute>
-            } />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/u/:username" element={<ProfilePage />} />
             <Route path="/ghost/:id" element={
               <GuestGateRoute>
                 <GhostRacePage />

@@ -115,6 +115,9 @@ const Dashboard: React.FC = () => {
           </h2>
           <p className="font-mono text-lg font-bold border-l-4 border-black dark:border-yellow-400 pl-4 text-black dark:text-yellow-400 uppercase">
             Initialize your next typing sequence.
+            {user && !user.isGuest && (
+              <> · <Link to={`/u/${encodeURIComponent(user.username)}`} className="underline">public profile</Link></>
+            )}
           </p>
         </div>
 
