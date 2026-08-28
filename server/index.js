@@ -9,6 +9,8 @@ import { body, validationResult } from "express-validator";
 import User from "./models/User.js";
 import Game from "./models/Game.js";
 import { initMultiplayer } from "./multiplayer/index.js";
+import { authenticateToken } from "./auth.js";
+import progressRoutes from "./routes/progress.js";
 
 dotenv.config();
 
@@ -26,23 +28,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/typocalyp
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Middleware to verify JWT token
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
-    }
-    req.user = user;
-    next();
-  });
-};
+// Stats, coach, leaderboard, and ghost routes
+app.use(progressRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
