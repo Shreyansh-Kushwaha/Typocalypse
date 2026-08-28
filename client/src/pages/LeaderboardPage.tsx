@@ -19,6 +19,11 @@ const LeaderboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = 'Global Ladder — Typocalypse';
+    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
     axios.get(`/leaderboard?period=${period}`)
       .then(res => setRows(res.data.rows))

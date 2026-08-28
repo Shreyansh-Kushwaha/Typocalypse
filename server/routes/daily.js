@@ -29,7 +29,9 @@ export function dailyPassage(day) {
 }
 
 // Public: today's challenge (result attached when logged in)
-router.get('/daily', optionalAuth, async (req, res) => {
+router.get('/daily', optionalAuth, async (req, res, next) => {
+  // Browser navigations want the app page (served with OG meta downstream)
+  if (req.accepts(['html', 'json']) === 'html') return next();
   try {
     const day = todayIndex();
     const { genre, text } = dailyPassage(day);

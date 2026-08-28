@@ -43,6 +43,11 @@ const DailyPage: React.FC = () => {
   };
 
   useEffect(() => {
+    document.title = 'Daily Apocalypse — Typocalypse';
+    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
+  }, []);
+
+  useEffect(() => {
     axios.get('/daily').then(res => {
       setDaily(res.data);
       if (res.data.myResult) {

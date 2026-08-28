@@ -15,6 +15,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import progressRoutes from "./routes/progress.js";
 import dailyRoutes from "./routes/daily.js";
+import { initOg } from "./og.js";
 import { streamStory, sse } from "./story.js";
 
 dotenv.config();
@@ -462,6 +463,8 @@ async function generateStory(choice, genre = 'fantasy') {
     throw error;
   }
 }
+
+initOg(app);
 
 const PORT = process.env.PORT || 3000;
 const httpServer = createServer(app);

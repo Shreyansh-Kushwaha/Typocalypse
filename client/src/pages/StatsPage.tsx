@@ -35,6 +35,11 @@ const StatsPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    document.title = 'Training Lab — Typocalypse';
+    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
+  }, []);
+
   useEffect(() => { void loadStats(); }, []);
 
   const getCoaching = async () => {

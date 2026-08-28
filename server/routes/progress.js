@@ -193,7 +193,9 @@ router.post('/stats/coach', authenticateToken, async (req, res) => {
 });
 
 // ---- leaderboard ----
-router.get('/leaderboard', optionalAuth, async (req, res) => {
+router.get('/leaderboard', optionalAuth, async (req, res, next) => {
+  // Browser navigations fall through to the SPA page
+  if (req.accepts(['html', 'json']) === 'html') return next();
   try {
     const period = req.query.period === 'weekly' ? 'weekly' : 'all';
     const match = { accuracy: { $gte: 80 } };
