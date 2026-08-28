@@ -6,6 +6,8 @@ import SignupPage from './pages/SignupPage.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import GamePage from './pages/GamePage.tsx';
 import GenreSelection from './pages/GenreSelection.tsx';
+import MultiplayerHub from './pages/MultiplayerHub.tsx';
+import RoomPage from './pages/RoomPage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
 function App() {
@@ -30,6 +32,16 @@ function App() {
             <Route path="/game" element={
               <ProtectedRoute>
                 <GamePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/multiplayer" element={
+              <ProtectedRoute>
+                <MultiplayerHub />
+              </ProtectedRoute>
+            } />
+            <Route path="/room/:code" element={
+              <ProtectedRoute>
+                <RoomPage />
               </ProtectedRoute>
             } />
           </Routes>

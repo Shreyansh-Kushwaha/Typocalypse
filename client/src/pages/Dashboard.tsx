@@ -107,13 +107,22 @@ const Dashboard: React.FC = () => {
               Select a genre. Warm up your fingers. Destroy the keyboard.
             </p>
             
-            <Link to="/genre-selection" className="inline-block mt-4">
-              <button
-                className={`bg-white dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-black font-black text-2xl px-10 py-5 uppercase transition-all shadow-[8px_8px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] active:translate-x-[8px] active:translate-y-[8px] active:shadow-none`}
-              >
-                🎮 Start New Game
-              </button>
-            </Link>
+            <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
+              <Link to="/genre-selection" className="inline-block">
+                <button
+                  className={`bg-white dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-black font-black text-2xl px-10 py-5 uppercase transition-all shadow-[8px_8px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] active:translate-x-[8px] active:translate-y-[8px] active:shadow-none`}
+                >
+                  🎮 Start New Game
+                </button>
+              </Link>
+              <Link to="/multiplayer" className="inline-block">
+                <button
+                  className={`bg-black text-white dark:bg-black dark:text-yellow-400 border-4 border-black font-black text-2xl px-10 py-5 uppercase transition-all shadow-[8px_8px_0px_0px_#fff] dark:shadow-[8px_8px_0px_0px_#facc15] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#fff] dark:hover:shadow-[6px_6px_0px_0px_#facc15] active:translate-x-[8px] active:translate-y-[8px] active:shadow-none`}
+                >
+                  🧟 Multiplayer
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
 
