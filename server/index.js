@@ -140,6 +140,100 @@ app.post('/auth/login', [
   }
 });
 
+// Guest access - mints a real account with no email or password
+const GUEST_NAMES = ['Wanderer', 'Drifter', 'Nomad', 'Stray', 'Scavenger', 'Vagrant', 'Outrider', 'Straggler'];
+
+app.post('/auth/guest', async (req, res) => {
+  try {
+    let user = null;
+    for (let attempt = 0; attempt < 10 && !user; attempt++) {
+      const base = GUEST_NAMES[Math.floor(Math.random() * GUEST_NAMES.length)];
+      const num = Math.floor(1000 + Math.random() * 9000);
+      // Last attempts fall back to a timestamp suffix that cannot collide twice
+      const username = attempt < 8 ? `${base}_${num}` : `${base}_${Date.now().toString(36)}`;
+      try {
+        user = await new User({ username, isGuest: true }).save();
+      } catch (err) {
+        if (err.code !== 11000) throw err; // 11000 = duplicate username, retry
+      }
+    }
+    if (!user) {
+      return res.status(500).json({ error: 'Could not generate a guest identity. Please try again.' });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, username: user.username, isGuest: true },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      message: 'Guest session created',
+      token,
+      user: { id: user._id, username: user.username, isGuest: true }
+    });
+  } catch (error) {
+    console.error('Guest login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Claim a guest account by adding email and password (optionally a new username)
+app.post('/auth/claim', authenticateToken, [
+  body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('username').optional({ values: 'falsy' }).isLength({ min: 3, max: 50 }).withMessage('Username must be 3-50 characters').trim().escape()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(e => e.msg).join(', ');
+      return res.status(400).json({ error: errorMessages });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (!user.isGuest) {
+      return res.status(400).json({ error: 'This account is already claimed' });
+    }
+
+    const { email, password, username } = req.body;
+    const newUsername = username || user.username;
+
+    const conflict = await User.findOne({
+      _id: { $ne: user._id },
+      $or: [{ email }, { username: newUsername }]
+    });
+    if (conflict) {
+      const field = conflict.email === email ? 'email' : 'username';
+      return res.status(400).json({ error: `That ${field} is already taken` });
+    }
+
+    user.username = newUsername;
+    user.email = email;
+    user.password = password; // hashed by the pre-save hook
+    user.isGuest = false;
+    await user.save();
+
+    const token = jwt.sign(
+      { userId: user._id, username: user.username, isGuest: false },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Account claimed successfully',
+      token,
+      user: { id: user._id, username: user.username, email: user.email, isGuest: false }
+    });
+  } catch (error) {
+    console.error('Claim account error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Game routes
 app.post('/game/start', authenticateToken, async (req, res) => {
   try {
