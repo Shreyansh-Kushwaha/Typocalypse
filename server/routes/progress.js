@@ -4,6 +4,7 @@ import { authenticateToken } from '../auth.js';
 import StatsSession from '../models/StatsSession.js';
 import Ghost from '../models/Ghost.js';
 import { COMMON_WORDS, JUNK_WORDS, shuffle } from '../multiplayer/content.js';
+import { bumpStreak, getStreak } from '../streaks.js';
 
 const router = express.Router();
 const MAX_GHOSTS_PER_USER = 10;
@@ -34,7 +35,8 @@ router.post('/stats/session', authenticateToken, async (req, res) => {
       durationMs: clamp(durationMs, 0, 3600000),
       keyStats: cleanKeyStats,
     });
-    res.status(201).json({ id: session._id });
+    const streak = await bumpStreak(req.user.userId, session.context).catch(() => null);
+    res.status(201).json({ id: session._id, streak });
   } catch (error) {
     console.error('Save session error:', error);
     res.status(500).json({ error: 'Failed to save session' });
@@ -89,8 +91,9 @@ async function loadMyStats(userId) {
 router.get('/stats/me', authenticateToken, async (req, res) => {
   try {
     const data = await loadMyStats(req.user.userId);
+    const streak = await getStreak(req.user.userId);
     const { sessions, ...rest } = data;
-    res.json(rest);
+    res.json({ ...rest, streak });
   } catch (error) {
     console.error('Load stats error:', error);
     res.status(500).json({ error: 'Failed to load stats' });

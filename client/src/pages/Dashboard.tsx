@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 interface MySummary { games: number; bestWpm: number; avgWpm: number; avgAccuracy: number; totalTyped: number }
 interface HistoryPoint { wpm: number; accuracy: number; context: string; mode?: string; at: string }
 interface GhostRow { id: string; wpm: number; accuracy: number; genre: string; preview: string; at: string }
+interface Streak { current: number; longest: number; atRisk: boolean }
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -13,11 +14,13 @@ const Dashboard: React.FC = () => {
   const [summary, setSummary] = useState<MySummary | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [ghosts, setGhosts] = useState<GhostRow[]>([]);
+  const [streak, setStreak] = useState<Streak | null>(null);
 
   useEffect(() => {
     axios.get('/stats/me').then(res => {
       setSummary(res.data.summary);
       setHistory(res.data.history);
+      setStreak(res.data.streak);
     }).catch(() => {});
     axios.get('/ghosts/mine').then(res => setGhosts(res.data)).catch(() => {});
   }, []);
@@ -48,6 +51,12 @@ const Dashboard: React.FC = () => {
             </h1>
           </div>
           <div className="flex items-center gap-6">
+            {streak !== null && streak.current > 0 && (
+              <div className={`flex items-center gap-1 border-2 border-black dark:border-yellow-400 px-3 py-1 font-mono font-black ${streak.atRisk ? 'bg-red-400 animate-pulse' : 'bg-orange-300 dark:bg-black'} text-black dark:text-yellow-400`}
+                title={streak.atRisk ? 'Play today or your streak dies' : `Longest streak ${streak.longest}`}>
+                🔥 {streak.current}
+              </div>
+            )}
             <div className="flex items-center gap-3 border-2 border-black dark:border-yellow-400 px-3 py-1 bg-white dark:bg-black">
               <div className="w-3 h-3 bg-green-500 border border-black dark:border-yellow-400 animate-pulse" />
               <span className="text-sm font-bold uppercase font-mono text-black dark:text-yellow-400">
@@ -67,11 +76,25 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12 space-y-16">
 
+        {/* Streak at risk */}
+        {streak?.atRisk && (
+          <div className={`border-4 border-black dark:border-yellow-400 bg-red-400 dark:bg-black p-4 flex flex-col md:flex-row items-center justify-between gap-4 ${brutalShadowLight} ${brutalShadowDark}`}>
+            <p className="font-mono font-black text-black dark:text-yellow-400 uppercase">
+              🔥 {streak.current} day streak at risk — finish any passage today to keep it alive
+            </p>
+            <Link to="/genre-selection">
+              <button className={`bg-black text-white dark:bg-yellow-400 dark:text-black border-2 border-black dark:border-yellow-400 font-black uppercase px-5 py-2 whitespace-nowrap transition-all ${brutalHover} ${brutalActive}`}>
+                Type now
+              </button>
+            </Link>
+          </div>
+        )}
+
         {/* Guest claim banner */}
         {user?.isGuest && (
           <div className={`border-4 border-black dark:border-yellow-400 bg-yellow-300 dark:bg-black p-4 flex flex-col md:flex-row items-center justify-between gap-4 ${brutalShadowLight} ${brutalShadowDark}`}>
             <p className="font-mono font-bold text-black dark:text-yellow-400 uppercase text-sm md:text-base">
-              ⚠ You are playing as a guest. Claim your account to keep this identity and your progress.
+              ⚠ You are playing as a guest.{streak && streak.current > 1 ? ` Claim your account so your 🔥 ${streak.current} day streak survives.` : ' Claim your account to keep this identity and your progress.'}
             </p>
             <Link to="/claim">
               <button className={`bg-black text-white dark:bg-yellow-400 dark:text-black border-2 border-black dark:border-yellow-400 font-black uppercase px-5 py-2 whitespace-nowrap transition-all ${brutalHover} ${brutalActive}`}>

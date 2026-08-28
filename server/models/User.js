@@ -30,6 +30,9 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  currentStreak: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  lastPlayedDay: { type: String }, // UTC day 'YYYY-MM-DD'
   createdAt: {
     type: Date,
     default: Date.now
