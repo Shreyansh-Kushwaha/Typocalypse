@@ -98,6 +98,24 @@ Typocalypse/
 - **User Authentication**: Secure signup/login with JWT
 - **Game Progress**: Save and continue games
 - **Responsive Design**: Works on desktop and mobile
+- **Multiplayer Rooms**: 8 real-time game modes over Socket.IO
+
+## 🎮 Multiplayer
+
+Create a room from the dashboard (Multiplayer button), share the 5 letter code, and friends join from the same screen. The host picks the mode and genre; everyone readies up and the host starts.
+
+| Mode | Type | Players | How it plays |
+|------|------|---------|--------------|
+| Horde Night | Co-op | 1-4 | Zombie words advance on a shared barricade. Type a word to kill its zombie. Shop between waves, story beats every 3rd wave. |
+| Story Sprint | PvP | 2-8 | 5 legs on the same passage. Each leg winner picks the story branch. |
+| Typo Royale | PvP | 2-20 | Timed bursts, slowest survivor eliminated each round. Eliminated players bet on survivors. |
+| Word War | PvP | 2-4 | Clear your word queue. 5 clean words in a row dumps junk words on an opponent. Overflow at 10 and you are out. |
+| Boss Raid | Co-op | 1-5 | Sentences deal damage. Interrupt boss casts by typing the counter-spell or eat blur, mirror, and vanish curses. Enrage at 30 percent. |
+| Relay Chronicles | Co-op | 2-6 | One story typed in turns with a baton-pass overlap. Branch votes weighted by accuracy. The finished chronicle is shown at the end. |
+| The Corruptor | Social | 3-8 | One hidden saboteur with sticky-keys, timer-shrink, and fake-accuracy tools. Type, discuss, accuse. Three dooms and the corruptor wins. |
+| Tug of Words | Teams | 2-10 | Combined live team WPM pulls the knot. Typos mute your pull, power words give burst yanks. Best of 3. |
+
+Multiplayer runs on the same server (Socket.IO shares the Express port) and needs no extra setup. Run the smoke tests with the server running: `node client/test-mp.mjs`.
 
 ## 🔧 API Endpoints
 
