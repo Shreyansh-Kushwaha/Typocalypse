@@ -96,6 +96,7 @@ Typocalypse/
 - **Real-time Typing Metrics**: WPM and accuracy tracking
 - **Multiple Genres**: Choose from 6 different story genres
 - **User Authentication**: Secure signup/login with JWT
+- **Guest Mode**: Play instantly without an account, claim it later to keep your progress
 - **Game Progress**: Save and continue games
 - **Responsive Design**: Works on desktop and mobile
 - **Multiplayer Rooms**: 8 real-time game modes over Socket.IO
@@ -122,6 +123,10 @@ Multiplayer runs on the same server (Socket.IO shares the Express port) and need
 ### Authentication
 - `POST /auth/signup` - User registration
 - `POST /auth/login` - User login
+- `POST /auth/guest` - Create a guest session (auto-generated name like `Wanderer_4821`, no email or password)
+- `POST /auth/claim` - Upgrade the current guest into a full account (email + password, optional new username); keeps all progress
+
+Note for existing deployments: the email unique index is now sparse so guests can omit email. If your database was created before guest mode, drop the old index once: `db.users.dropIndex('email_1')` (it is recreated sparse on next server start).
 
 ### Game
 - `POST /game/start` - Start a new game
