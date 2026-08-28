@@ -1,12 +1,13 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET, corsOrigin } from '../config.js';
 import { RoomManager, MODES } from './rooms.js';
 import { createEngine } from './modes/index.js';
 import MatchResult from '../models/MatchResult.js';
 
 export function initMultiplayer(httpServer) {
   const io = new Server(httpServer, {
-    cors: { origin: true, credentials: true },
+    cors: { origin: corsOrigin, credentials: true },
   });
 
   const manager = new RoomManager();
@@ -14,7 +15,7 @@ export function initMultiplayer(httpServer) {
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('Authentication required'));
-    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
       if (err) return next(new Error('Invalid token'));
       socket.data.user = { userId: user.userId, username: user.username };
       next();

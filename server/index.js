@@ -10,19 +10,47 @@ import User from "./models/User.js";
 import Game from "./models/Game.js";
 import { initMultiplayer } from "./multiplayer/index.js";
 import { authenticateToken } from "./auth.js";
+import { JWT_SECRET, corsOrigin } from "./config.js";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import progressRoutes from "./routes/progress.js";
 import { streamStory, sse } from "./story.js";
 
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1); // behind Render/other proxies, for correct rate-limit IPs
+app.use(helmet());
 app.use(cors({
-  origin: true,
+  origin: corsOrigin,
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '200kb' }));
+
+// Abuse controls
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Try again in a few minutes.' },
+});
+const guestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many guest sessions from this address. Try again later.' },
+});
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Slow down - too many story requests.' },
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/typocalypse')
@@ -43,7 +71,7 @@ app.get('/health', (req, res) => {
 });
 
 // Auth routes
-app.post('/auth/signup', [
+app.post('/auth/signup', authLimiter, [
   body('username').isLength({ min: 3, max: 50 }).withMessage('Username must be 3-50 characters').trim().escape(),
   body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
@@ -70,7 +98,7 @@ app.post('/auth/signup', [
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET || 'your-secret-key',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -85,7 +113,7 @@ app.post('/auth/signup', [
   }
 });
 
-app.post('/auth/login', [
+app.post('/auth/login', authLimiter, [
   body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
   body('password').exists().withMessage('Password is required')
 ], async (req, res) => {
@@ -113,7 +141,7 @@ app.post('/auth/login', [
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET || 'your-secret-key',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -131,7 +159,7 @@ app.post('/auth/login', [
 // Guest access - mints a real account with no email or password
 const GUEST_NAMES = ['Wanderer', 'Drifter', 'Nomad', 'Stray', 'Scavenger', 'Vagrant', 'Outrider', 'Straggler'];
 
-app.post('/auth/guest', async (req, res) => {
+app.post('/auth/guest', guestLimiter, async (req, res) => {
   try {
     let user = null;
     for (let attempt = 0; attempt < 10 && !user; attempt++) {
@@ -151,7 +179,7 @@ app.post('/auth/guest', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user._id, username: user.username, isGuest: true },
-      process.env.JWT_SECRET || 'your-secret-key',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -167,7 +195,7 @@ app.post('/auth/guest', async (req, res) => {
 });
 
 // Claim a guest account by adding email and password (optionally a new username)
-app.post('/auth/claim', authenticateToken, [
+app.post('/auth/claim', authLimiter, authenticateToken, [
   body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('username').optional({ values: 'falsy' }).isLength({ min: 3, max: 50 }).withMessage('Username must be 3-50 characters').trim().escape()
@@ -207,7 +235,7 @@ app.post('/auth/claim', authenticateToken, [
 
     const token = jwt.sign(
       { userId: user._id, username: user.username, isGuest: false },
-      process.env.JWT_SECRET || 'your-secret-key',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -309,7 +337,7 @@ const sseHeaders = (res) => {
   res.flushHeaders?.();
 };
 
-app.post('/game/start-stream', authenticateToken, async (req, res) => {
+app.post('/game/start-stream', aiLimiter, authenticateToken, async (req, res) => {
   try {
     const { genre = 'fantasy' } = req.body;
     const game = new Game({ userId: req.user.userId, currentStory: '', choices: [], genre, progress: 0 });
@@ -330,7 +358,7 @@ app.post('/game/start-stream', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/game/continue-stream', authenticateToken, async (req, res) => {
+app.post('/game/continue-stream', aiLimiter, authenticateToken, async (req, res) => {
   try {
     const { gameId, choice } = req.body;
     const game = await Game.findOne({ _id: gameId, userId: req.user.userId });
@@ -361,81 +389,6 @@ app.get('/games', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Get games error:', error);
     res.status(500).json({ error: 'Failed to fetch games' });
-  }
-});
-
-// Legacy API routes (for backward compatibility)
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
-// Generate a story paragraph
-app.post("/api/story", async (req, res) => {
-  const { choice } = req.body;
-  const genre = req.body.genre || 'fantasy';
-
-  const prompt = choice
-    ? `The player chose: ${choice}. Continue the ${genre} story. Write one short paragraph (10-20 words).`
-    : `Start a ${genre} story. Write one short paragraph (10-20 words).`;
-
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "openrouter/auto",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 200
-      })
-    });
-
-    const data = await response.json();
-    const output = data.choices?.[0];
-    const text = output?.message?.content || "Story generation failed";
-
-    res.json({ paragraph: text });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch story." });
-  }
-});
-
-// Generate choices
-app.post("/api/choices", async (req, res) => {
-  const { lastParagraph } = req.body;
-  const genre = req.body.genre || 'fantasy';
-
-  const prompt = `Based on this paragraph:\n"${lastParagraph}"\nGenerate exactly 2 ${genre} story choices.
-  Each choice must be one line only, between 10 and 15 words.
-  Use easy and clear words only.
-  Do not add numbering, extra text, or explanations.
-  Just output the two choices as separate lines.`;
-
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "openrouter/auto",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 100
-      })
-    });
-
-    const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content || "";
-    const options = raw.split("\n").filter(l => l.trim()).slice(0, 2);
-
-    res.json({ choices: options });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch choices." });
   }
 });
 
