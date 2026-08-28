@@ -3,6 +3,7 @@ import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { useTypingText } from '../useTypingText';
 import { Panel, TypingText, Countdown, useNow, Tag, brutal } from '../ui';
+import { sfx } from '../../sound';
 
 interface RaidState {
   bossHP: number; bossMax: number; teamHP: number; enraged: boolean;
@@ -24,13 +25,16 @@ const BossRaidGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) 
     const onStart = (data: { boss: string }) => setBoss(data.boss);
     const onSentence = (data: { text: string }) => setSentence(data.text);
     const onState = (data: RaidState) => setState(data);
+    const onCast = () => sfx.alarm();
     const onCurse = (data: { curse: string; until: number }) => {
       setCurse(data);
+      sfx.alarm();
       setBanner(`🩸 CAST LANDED — ${data.curse.toUpperCase()} CURSE`);
     };
-    const onInterrupted = (data: { by: string; bonus: number }) => setBanner(`⚡ ${data.by} INTERRUPTED THE CAST +${data.bonus}`);
-    const onEnrage = () => setBanner('🔥 THE BOSS IS ENRAGED — DOUBLE DAMAGE, FASTER CASTS');
+    const onInterrupted = (data: { by: string; bonus: number }) => { setBanner(`⚡ ${data.by} INTERRUPTED THE CAST +${data.bonus}`); sfx.success(); };
+    const onEnrage = () => { setBanner('🔥 THE BOSS IS ENRAGED — DOUBLE DAMAGE, FASTER CASTS'); sfx.alarm(); };
     s.on('raid:start', onStart);
+    s.on('raid:cast', onCast);
     s.on('raid:sentence', onSentence);
     s.on('raid:state', onState);
     s.on('raid:curse', onCurse);
@@ -38,6 +42,7 @@ const BossRaidGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) 
     s.on('raid:enrage', onEnrage);
     return () => {
       s.off('raid:start', onStart);
+      s.off('raid:cast', onCast);
       s.off('raid:sentence', onSentence);
       s.off('raid:state', onState);
       s.off('raid:curse', onCurse);

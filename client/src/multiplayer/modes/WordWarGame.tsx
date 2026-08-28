@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { Panel, Countdown, Tag, brutal } from '../ui';
+import { sfx } from '../../sound';
 
 interface QWord { word: string; junk: boolean; from: string | null }
 interface WarPlayer { userId: string; name: string; queue: QWord[]; streak: number; points: number; alive: boolean }
@@ -18,10 +19,12 @@ const WordWarGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =
     const s = getSocket();
     const onStart = (data: { endsAt: number; cap: number }) => { setEndsAt(data.endsAt); setCap(data.cap); };
     const onState = (data: { players: WarPlayer[]; endsAt: number }) => { setPlayers(data.players); setEndsAt(data.endsAt); };
-    const onAttack = (data: { from: { name: string }; to: { userId: string; name: string }; count: number }) =>
+    const onAttack = (data: { from: { name: string }; to: { userId: string; name: string }; count: number }) => {
+      if (data.to.userId === myId) sfx.alarm(); else sfx.pop();
       setBanner(data.to.userId === myId
         ? `⚔️ ${data.from.name} DUMPED ${data.count} JUNK WORDS ON YOU`
         : `⚔️ ${data.from.name} attacked ${data.to.name}`);
+    };
     const onElim = (data: { userId: string; name: string }) =>
       setBanner(data.userId === myId ? '💀 YOUR QUEUE OVERFLOWED' : `💀 ${data.name} overflowed`);
     s.on('wordwar:start', onStart);
@@ -45,8 +48,10 @@ const WordWarGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =
     if (!typed || !me?.alive) return;
     if (me.queue.some(q => q.word === typed)) {
       sendGameEvent('word', { word: typed });
+      sfx.pop();
     } else {
       sendGameEvent('typo', {});
+      sfx.error();
       setFlash(true);
       setTimeout(() => setFlash(false), 150);
     }

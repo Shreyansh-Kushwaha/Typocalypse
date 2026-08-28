@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { Panel, Countdown, Tag, brutal } from '../ui';
+import { sfx } from '../../sound';
 
 interface TugTeams { teal: { userId: string; name: string }[]; crimson: { userId: string; name: string }[]; bestOf: number }
 interface TugState { knot: number; teal: number; crimson: number; endsAt: number; wins: { teal: number; crimson: number }; pull: number }
@@ -23,8 +24,8 @@ const TugGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
     const onPull = (data: { pull: number }) => { setBanner(`🪢 PULL ${data.pull} — HEAVE`); setPower(null); };
     const onState = (data: TugState) => setState(data);
     const onPower = (data: { id: number; word: string }) => setPower(data);
-    const onYank = (data: { by: string; team: string }) => { setPower(null); setBanner(`⚡ ${data.by} YANKED FOR ${data.team.toUpperCase()}`); };
-    const onPullWon = (data: { team: string }) => setBanner(`🏁 ${data.team.toUpperCase()} TAKES THE PULL`);
+    const onYank = (data: { by: string; team: string }) => { setPower(null); setBanner(`⚡ ${data.by} YANKED FOR ${data.team.toUpperCase()}`); sfx.combo(5); };
+    const onPullWon = (data: { team: string }) => { setBanner(`🏁 ${data.team.toUpperCase()} TAKES THE PULL`); sfx.success(); };
     s.on('tug:teams', onTeams);
     s.on('tug:words', onWords);
     s.on('tug:pull', onPull);
@@ -56,10 +57,12 @@ const TugGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
     }
     if (typed === current) {
       sendGameEvent('word', { len: current.length });
+      sfx.pop();
       setIdx(i => i + 1);
       if (words.length - idx < 8) sendGameEvent('need-words', {});
     } else {
       sendGameEvent('typo', {});
+      sfx.error();
       setFlash(true);
       setTimeout(() => setFlash(false), 150);
     }

@@ -3,6 +3,7 @@ import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { useTypingText } from '../useTypingText';
 import { Panel, Btn, TypingText, ProgressLane, Countdown, useNow, Tag } from '../ui';
+import { sfx } from '../../sound';
 
 interface Leg { leg: number; totalLegs: number; text: string; startAt: number }
 interface LaneP { userId: string; name: string; pct: number; wpm: number; done: boolean }
@@ -18,8 +19,10 @@ const SprintGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
     const s = getSocket();
     const onLeg = (data: Leg) => { setLeg(data); setBanner(''); setChoosing(null); };
     const onProgress = (data: { players: LaneP[] }) => setLanes(data.players);
-    const onLegEnd = (data: { leg: number; winner: { name: string } }) =>
+    const onLegEnd = (data: { leg: number; winner: { name: string } }) => {
       setBanner(`LEG ${data.leg} — ${data.winner.name} TAKES IT`);
+      sfx.success();
+    };
     const onChoosing = (data: { chooser: string; choices: string[] }) => setChoosing(data);
     const onChosen = (data: { chooser: string; choice: string }) => {
       setChoosing(null);
@@ -40,7 +43,7 @@ const SprintGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
   }, []);
 
   const running = !!leg && now >= leg.startAt && !banner && !choosing;
-  const { pos, handleKey } = useTypingText(leg?.text || '', {
+  const { pos, errors: typingErrors, handleKey } = useTypingText(leg?.text || '', {
     enabled: running,
     report: p => sendGameEvent('progress', p),
     onDone: () => sendGameEvent('progress', { chars: leg?.text.length || 0, errors: 0, done: true }),
@@ -75,7 +78,7 @@ const SprintGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
           )}
         </Panel>
       ) : (
-        <TypingText text={leg.text} pos={pos} onKeyDown={handleKey} disabled={!running} />
+        <TypingText text={leg.text} pos={pos} onKeyDown={handleKey} disabled={!running} shakeOn={typingErrors} />
       )}
 
       <Panel>

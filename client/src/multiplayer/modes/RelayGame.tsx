@@ -3,6 +3,7 @@ import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { useTypingText } from '../useTypingText';
 import { Panel, Btn, TypingText, ProgressLane, useNow, Tag, Countdown } from '../ui';
+import { sfx } from '../../sound';
 
 interface Chapter {
   chapter: number;
@@ -29,9 +30,11 @@ const RelayGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
     };
     const onProgress = (data: { pct: number }) => setPct(data.pct);
     const onOverlap = (data: { text: string }) => setOverlap(data.text);
-    const onBatonCaught = (data: { by: string }) => setBanner(`🤝 ${data.by} caught the baton`);
-    const onParaDone = (data: { by: string; wpm: number; acc: number }) =>
+    const onBatonCaught = (data: { by: string }) => { setBanner(`🤝 ${data.by} caught the baton`); sfx.pop(); };
+    const onParaDone = (data: { by: string; wpm: number; acc: number }) => {
       setBanner(`¶ done — ${data.by} · ${data.wpm} wpm · ${data.acc}%`);
+      sfx.success();
+    };
     const onVote = (data: { choices: string[]; endsAt: number }) => setVote(data);
     const onVoted = (data: { choice: string }) => { setVote(null); setBanner(`The room chose “${data.choice}”`); };
     s.on('relay:chapter', onChapter);

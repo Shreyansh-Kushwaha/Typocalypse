@@ -3,6 +3,7 @@ import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { useTypingText } from '../useTypingText';
 import { Panel, Btn, TypingText, ProgressLane, Countdown, useNow, Tag } from '../ui';
+import { sfx } from '../../sound';
 
 interface Round { round: number; text: string; startAt: number; endsAt: number; alive: string[]; nextTimerMs: number }
 interface Standing { userId: string; name: string; wpm: number; acc: number }
@@ -24,6 +25,7 @@ const RoyaleGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
     };
     const onElim = (data: { round: number; name: string; userId: string }) => {
       setBanner(data.userId === myId ? 'YOU HAVE BEEN ELIMINATED' : `${data.name} IS OUT`);
+      if (data.userId === myId) sfx.lose(); else sfx.alarm();
     };
     s.on('royale:round', onRound);
     s.on('royale:standings', onStandings);
@@ -37,7 +39,7 @@ const RoyaleGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
 
   const alive = !!round?.alive.includes(myId);
   const running = !!round && now >= round.startAt && now < round.endsAt && alive;
-  const { pos, handleKey } = useTypingText(round?.text || '', {
+  const { pos, errors: typingErrors, handleKey } = useTypingText(round?.text || '', {
     enabled: running,
     report: p => sendGameEvent('progress', p),
   });
@@ -56,7 +58,7 @@ const RoyaleGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
       </div>
 
       {alive ? (
-        <TypingText text={round.text} pos={pos} onKeyDown={handleKey} disabled={!running} />
+        <TypingText text={round.text} pos={pos} onKeyDown={handleKey} disabled={!running} shakeOn={typingErrors} />
       ) : (
         <Panel>
           <p className="font-black uppercase mb-2">👻 Spectating — bet on who survives this round (+10 pts)</p>

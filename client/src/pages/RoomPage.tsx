@@ -6,6 +6,7 @@ import { MODE_LIST, GENRES } from '../multiplayer/types';
 import type { RoomSnapshot } from '../multiplayer/types';
 import { Btn, Panel, Tag, ChatBox, brutal } from '../multiplayer/ui';
 import type { ChatMsg } from '../multiplayer/ui';
+import { sfx, isMuted, toggleMute } from '../sound';
 import SprintGame from '../multiplayer/modes/SprintGame';
 import RoyaleGame from '../multiplayer/modes/RoyaleGame';
 import WordWarGame from '../multiplayer/modes/WordWarGame';
@@ -51,11 +52,12 @@ const RoomPage: React.FC = () => {
       }
     });
     const onUpdate = (snap: RoomSnapshot) => setRoom(snap);
-    const onStarted = () => { setResults(null); setPlaying(true); };
+    const onStarted = () => { setResults(null); setPlaying(true); sfx.go(); };
     const onOver = (data: { mode: string; results: Results }) => {
       setPlaying(false);
       setResults(data.results);
       setResultsMode(data.mode);
+      sfx.win();
     };
     const onChat = (msg: ChatMsg) => setMessages(prev => [...prev.slice(-99), msg]);
     socket.on('room:update', onUpdate);
@@ -110,20 +112,32 @@ const RoomPage: React.FC = () => {
   );
 };
 
-const Shell: React.FC<{ code: string; onLeave: () => void; children: React.ReactNode }> = ({ code, onLeave, children }) => (
-  <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans relative">
-    <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-    <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
-      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-        <span className="font-mono text-2xl font-black tracking-[0.3em] bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1">
-          {code}
-        </span>
-        <Btn color="bg-red-400" onClick={onLeave}>Leave</Btn>
-      </div>
-    </header>
-    <main className="p-4 md:p-6 relative z-10">{children}</main>
-  </div>
-);
+const Shell: React.FC<{ code: string; onLeave: () => void; children: React.ReactNode }> = ({ code, onLeave, children }) => {
+  const [muted, setMuted] = useState(isMuted());
+  return (
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans relative">
+      <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+          <span className="font-mono text-2xl font-black tracking-[0.3em] bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1">
+            {code}
+          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMuted(toggleMute())}
+              className="text-2xl border-2 border-black dark:border-yellow-400 px-2 py-1 bg-white dark:bg-black"
+              title={muted ? 'Unmute sounds' : 'Mute sounds'}
+            >
+              {muted ? '🔇' : '🔊'}
+            </button>
+            <Btn color="bg-red-400" onClick={onLeave}>Leave</Btn>
+          </div>
+        </div>
+      </header>
+      <main className="p-4 md:p-6 relative z-10">{children}</main>
+    </div>
+  );
+};
 
 const Lobby: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, myId }) => {
   const me = room.players.find(p => p.userId === myId);

@@ -77,7 +77,7 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
   }, []);
 
   const running = !!chapter && phase === 'typing' && now >= chapter.startAt && now < myDeadline;
-  const { pos, handleKey } = useTypingText(chapter?.text || '', {
+  const { pos, errors: typingErrors, handleKey } = useTypingText(chapter?.text || '', {
     enabled: running,
     report: p => sendGameEvent('progress', p),
     keymap: (key) => {
@@ -108,7 +108,7 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
 
       {phase === 'typing' && (
         <>
-          <TypingText text={chapter.text} pos={pos} onKeyDown={handleKey} disabled={!running} />
+          <TypingText text={chapter.text} pos={pos} onKeyDown={handleKey} disabled={!running} shakeOn={typingErrors} />
           {role === 'corruptor' && (
             <Panel className="border-red-500">
               <p className="font-black uppercase text-xs tracking-widest mb-2 text-red-600 dark:text-red-400">

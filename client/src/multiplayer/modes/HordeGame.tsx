@@ -3,6 +3,7 @@ import type { RoomSnapshot } from '../types';
 import { getSocket, sendGameEvent } from '../socket';
 import { useTypingText } from '../useTypingText';
 import { Panel, Btn, TypingText, Countdown, Tag, brutal } from '../ui';
+import { sfx } from '../../sound';
 
 interface Zombie { id: number; word: string; row: number; col: number; claimedBy: string | null }
 interface Field { zombies: Zombie[]; hp: number; points: number; wave: number; nukes: number; remaining: number }
@@ -30,12 +31,12 @@ const HordeGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
         setBuffer('');
       }
     };
-    const onWave = (data: { wave: number }) => { setPhase('wave'); setShop(null); setStory(null); setBanner(`🌊 WAVE ${data.wave}`); };
+    const onWave = (data: { wave: number }) => { setPhase('wave'); setShop(null); setStory(null); setBanner(`🌊 WAVE ${data.wave}`); sfx.go(); };
     const onShop = (data: ShopData) => { setPhase('shop'); setShop(data); targetRef.current = null; setBuffer(''); };
     const onStory = (data: { text: string; endsAt: number }) => { setPhase('story'); setStory(data); targetRef.current = null; setBuffer(''); };
-    const onBreach = (data: { word: string; damage: number }) => setBanner(`💥 “${data.word}” HIT THE WALL −${data.damage} HP`);
-    const onKill = (data: { by: string }) => setBanner(`🩸 ${data.by} scored a kill`);
-    const onNuked = (data: { by: string; cleared: number }) => setBanner(`☢️ ${data.by} NUKED ${data.cleared} ZOMBIES`);
+    const onBreach = (data: { word: string; damage: number }) => { setBanner(`💥 “${data.word}” HIT THE WALL −${data.damage} HP`); sfx.alarm(); };
+    const onKill = (data: { by: string }) => { setBanner(`🩸 ${data.by} scored a kill`); sfx.pop(); };
+    const onNuked = (data: { by: string; cleared: number }) => { setBanner(`☢️ ${data.by} NUKED ${data.cleared} ZOMBIES`); sfx.alarm(); };
     const onBought = (data: { by: string; item: string }) => setBanner(`🛒 ${data.by} bought ${data.item}`);
     s.on('horde:field', onField);
     s.on('horde:wave', onWave);
