@@ -11,6 +11,7 @@ import Game from "./models/Game.js";
 import { initMultiplayer } from "./multiplayer/index.js";
 import { authenticateToken } from "./auth.js";
 import progressRoutes from "./routes/progress.js";
+import { streamStory, sse } from "./story.js";
 
 dotenv.config();
 
@@ -296,6 +297,58 @@ app.post('/game/continue', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Continue game error:', error);
     res.status(500).json({ error: 'Failed to continue game' });
+  }
+});
+
+// Streaming story endpoints - tokens arrive over SSE while the player watches
+const sseHeaders = (res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders?.();
+};
+
+app.post('/game/start-stream', authenticateToken, async (req, res) => {
+  try {
+    const { genre = 'fantasy' } = req.body;
+    const game = new Game({ userId: req.user.userId, currentStory: '', choices: [], genre, progress: 0 });
+    await game.save();
+    sseHeaders(res);
+    const { story, choices, closed } = await streamStory(res, { choice: null, genre });
+    game.currentStory = story;
+    game.choices = choices;
+    await game.save();
+    if (!closed) {
+      sse(res, { type: 'done', gameId: game._id, story, choices, progress: 0 });
+      res.end();
+    }
+  } catch (error) {
+    console.error('Start stream error:', error);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to start game' });
+    else res.end();
+  }
+});
+
+app.post('/game/continue-stream', authenticateToken, async (req, res) => {
+  try {
+    const { gameId, choice } = req.body;
+    const game = await Game.findOne({ _id: gameId, userId: req.user.userId });
+    if (!game) return res.status(404).json({ error: 'Game not found' });
+    sseHeaders(res);
+    const { story, choices, closed } = await streamStory(res, { choice, genre: game.genre });
+    game.currentStory = story;
+    game.choices = choices;
+    game.progress += 1;
+    await game.save();
+    if (!closed) {
+      sse(res, { type: 'done', gameId: game._id, story, choices, progress: game.progress });
+      res.end();
+    }
+  } catch (error) {
+    console.error('Continue stream error:', error);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to continue game' });
+    else res.end();
   }
 });
 
