@@ -48,12 +48,15 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many attempts. Try again in a few minutes.' },
 });
+// Guest play is the main call to action and several public pages mint a guest
+// on arrival, so this has to survive a shared address - a classroom, an office,
+// or a mobile carrier behind one NAT - without locking real players out.
 const guestLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 10,
+  limit: 40,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many guest sessions from this address. Try again later.' },
+  message: { error: 'Too many guest sessions from this address in the last hour. Log in, or try again shortly.' },
 });
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
