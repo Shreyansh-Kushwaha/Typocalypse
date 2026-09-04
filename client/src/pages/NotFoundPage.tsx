@@ -20,7 +20,7 @@ const NotFoundPage: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black relative overflow-x-hidden pb-16">
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black relative pb-16">
       <Seo
         title="Page not found"
         description="This Typocalypse page does not exist. Head back to the daily challenge, the campaign, or the arcade."
