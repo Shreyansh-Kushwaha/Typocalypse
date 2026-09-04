@@ -1,4 +1,9 @@
 import { io, Socket } from 'socket.io-client';
+import { reportBackendTrouble, noteBackendAwake } from '../backend';
+
+// "Authentication required" is our own rejection; anything else on connect is
+// the transport failing, which on Render means the instance is still booting.
+const isTransportError = (message: string) => !/auth|token/i.test(message);
 
 let socket: Socket | null = null;
 
@@ -9,6 +14,10 @@ export function getSocket(): Socket {
     socket = io(url, {
       auth: { token },
       transports: ['websocket', 'polling'],
+    });
+    socket.on('connect', () => noteBackendAwake());
+    socket.on('connect_error', (err: Error) => {
+      if (isTransportError(err?.message || '')) reportBackendTrouble();
     });
   }
   return socket;

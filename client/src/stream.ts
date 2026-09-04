@@ -1,5 +1,7 @@
 // SSE-over-fetch reader for the streaming story endpoints.
 
+import { reportBackendTrouble, whenAwake, noteBackendAwake } from './backend';
+
 export interface StoryResult {
   gameId?: string;
   story: string;
@@ -14,7 +16,7 @@ export async function streamStory(
 ): Promise<StoryResult> {
   const base = import.meta.env.VITE_API_URL || '';
   const token = localStorage.getItem('token');
-  const response = await fetch(base + path, {
+  const send = () => fetch(base + path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -22,6 +24,18 @@ export async function streamStory(
     },
     body: JSON.stringify(body),
   });
+
+  // A sleeping instance rejects or drops the connection outright. Wait for the
+  // wake watcher to confirm the server is up, then ask once more.
+  let response: Response;
+  try {
+    response = await send();
+  } catch {
+    reportBackendTrouble();
+    await whenAwake();
+    response = await send();
+  }
+  noteBackendAwake();
   if (!response.ok || !response.body) {
     let message = 'Story stream failed';
     try {

@@ -105,3 +105,17 @@ html.dark body {
 
 /* Cosmetics (themes, carets, fonts, reduced motion) live in themes.css,
    imported from main.tsx. Typing surfaces opt in with the `typo-text` class. */
+
+/* backend cold-start toast (see src/backend.ts) */
+@keyframes wakebar {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(330%); }
+}
+@keyframes wakespin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes wakepulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}

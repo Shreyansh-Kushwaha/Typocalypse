@@ -32,9 +32,12 @@ import ProtectedRoute from './components/ProtectedRoute.tsx';
 import GuestGateRoute from './components/GuestGateRoute.tsx';
 import ProgressionToasts from './components/ProgressionToasts.tsx';
 import SettingsFab from './components/SettingsFab.tsx';
+import BackendWakeToast from './components/BackendWakeToast.tsx';
 import { installProgressionWatcher } from './progression.ts';
+import { installBackendWatcher } from './backend.ts';
 
 installProgressionWatcher();
+installBackendWatcher();
 
 const P = ({ children }: { children: React.ReactNode }) => <ProtectedRoute>{children}</ProtectedRoute>;
 const G = ({ children }: { children: React.ReactNode }) => <GuestGateRoute>{children}</GuestGateRoute>;
@@ -46,6 +49,7 @@ function App() {
         <Router>
           <div className="App">
             <ProgressionToasts />
+            <BackendWakeToast />
             <SettingsFab />
             <Routes>
               <Route path="/" element={<LandingPage />} />
