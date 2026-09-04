@@ -41,16 +41,34 @@ const KeyboardHeatmap: React.FC<{ keyStats: Record<string, KeyStat>; layout?: st
       </div>
     );
   };
+  // Text alternative: the key grid is a fixed-width picture, so screen readers
+  // and anyone who cannot scan colour get the same finding as a sentence.
+  const ranked = Object.entries(folded)
+    .map(([ch, v]) => ({ ch, attempts: v.h + v.m, misses: v.m, rate: v.m / (v.h + v.m) }))
+    .filter(k => k.attempts >= 5)
+    .sort((a, b) => b.rate - a.rate);
+  const label = ranked.length === 0
+    ? 'Keyboard heatmap. No key has five attempts yet, so nothing is coloured — type a few more passages.'
+    : `Keyboard heatmap of ${ranked.length} keys with at least five attempts, shaded red by miss rate. Worst: ${
+      ranked.slice(0, 5).map(k => `${k.ch === ' ' ? 'space' : k.ch} at ${Math.round(k.rate * 100)} percent missed over ${k.attempts} attempts`).join('; ')
+    }.`;
+
   return (
-    <div className="space-y-1.5 overflow-x-auto pb-1">
-      {rows.map((row, ri) => (
-        <div key={ri} className="flex gap-1.5" style={{ paddingLeft: `${ri * 14}px` }}>
-          {Array.from(row).map(ch => cell(ch))}
+    <div>
+      {/* Fixed-width key grid: it scrolls inside its own box so a phone never scrolls the page. */}
+      <div className="overflow-x-auto pb-1" tabIndex={0} role="group" aria-label={label}>
+        <div className="space-y-1.5 w-max" aria-hidden="true">
+          {rows.map((row, ri) => (
+            <div key={ri} className="flex gap-1.5" style={{ paddingLeft: `${ri * 14}px` }}>
+              {Array.from(row).map(ch => cell(ch))}
+            </div>
+          ))}
+          <div className="flex" style={{ paddingLeft: '56px' }}>
+            {cell(' ', true)}
+          </div>
         </div>
-      ))}
-      <div className="flex" style={{ paddingLeft: '56px' }}>
-        {cell(' ', true)}
       </div>
+      <p className="sr-only">{label}</p>
     </div>
   );
 };

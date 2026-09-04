@@ -6,6 +6,8 @@ export interface ProgressBarProps {
   showLabel?: boolean;
   animated?: boolean;
   className?: string;
+  /** Sentence a screen reader hears instead of the bare number. */
+  label?: string;
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -14,12 +16,20 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   showLabel = true,
   animated = true,
   className = '',
+  label,
 }) => {
   const percentage = (value / max) * 100;
-  
+
   return (
     <div className={className}>
-      <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+      <div
+        className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={value}
+        aria-valuemin={0}
+        aria-valuemax={max}
+        aria-label={label ?? `${value} of ${max} words typed`}
+      >
         <div
           className={`
             h-full bg-gradient-to-r from-indigo-500 to-green-500

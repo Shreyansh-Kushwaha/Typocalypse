@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -9,20 +9,30 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const InputField = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, success, hint, icon, className, ...props }, ref) => {
+  ({ label, error, success, hint, icon, className, id, ...props }, ref) => {
+    // A real <label for=…> and a described-by chain, so the control is never
+    // just a box with a placeholder.
+    const autoId = useId();
+    const inputId = id ?? `input-${autoId}`;
+    const errorId = `${inputId}-error`;
+    const hintId = `${inputId}-hint`;
+    const describedBy = [error ? errorId : null, hint && !error ? hintId : null].filter(Boolean).join(' ') || undefined;
     return (
       <div className="space-y-1.5">
         {label && (
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+          <label htmlFor={inputId} className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
             {label}
           </label>
         )}
-        
+
         <div className="relative">
           <input
             ref={ref}
+            id={inputId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
             className={`
-              w-full px-4 py-3 rounded-lg border transition-all
+              w-full px-4 py-3 rounded-lg border transition-all text-base
               bg-white dark:bg-slate-800
               text-slate-900 dark:text-slate-100
               placeholder:text-slate-400 dark:placeholder:text-slate-500
@@ -39,14 +49,14 @@ const InputField = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {icon && (
-            <div className="absolute right-3 top-3 text-slate-400">
+            <div className="absolute right-3 top-3 text-slate-400" aria-hidden="true">
               {icon}
             </div>
           )}
         </div>
         
         {error && (
-          <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+          <p id={errorId} role="alert" className="text-xs text-red-600 dark:text-red-400 font-medium">
             {error}
           </p>
         )}
@@ -58,7 +68,7 @@ const InputField = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         
         {hint && !error && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p id={hintId} className="text-xs text-slate-500 dark:text-slate-400">
             {hint}
           </p>
         )}

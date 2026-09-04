@@ -242,6 +242,7 @@ const SettingsPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="flex flex-wrap gap-2">
             <Link to="/progress" onClick={onClose} className={`${optBase} ${optOff} bg-yellow-300`}>🎒 Locker &amp; achievements</Link>
             <Link to="/friends" onClick={onClose} className={`${optBase} ${optOff} bg-cyan-300`}>🫂 Friends</Link>
+            <Link to="/privacy" onClick={onClose} className={`${optBase} ${optOff} bg-purple-300`}>🔒 Privacy policy</Link>
           </div>
         </div>
       </aside>

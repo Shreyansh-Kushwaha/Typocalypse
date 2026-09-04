@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SeoFor } from '../seo';
 
 const genres = [
   { id: 'fantasy', icon: '⚔️', name: 'FANTASY', description: 'Magical worlds & epic quests', lightBg: 'bg-cyan-300' },
@@ -29,7 +30,7 @@ const GenreCard: React.FC<GenreCardProps> = ({ icon, name, description, disabled
   if (disabled) {
     return (
       <div className="relative border-4 border-dashed border-black dark:border-yellow-400/50 bg-gray-200 dark:bg-black opacity-70 cursor-not-allowed p-6 flex flex-col items-center justify-center text-center grayscale">
-        <div className="text-5xl mb-4">{icon}</div>
+        <div className="text-4xl sm:text-5xl mb-4" aria-hidden="true">{icon}</div>
         <h3 className="text-xl font-black uppercase text-black dark:text-yellow-400/50 mb-2">{name}</h3>
         <p className="text-xs font-mono font-bold text-black dark:text-yellow-400/50 mb-4">{description}</p>
         <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 text-xs font-bold uppercase border-2 border-black dark:border-yellow-400">
@@ -52,14 +53,14 @@ const GenreCard: React.FC<GenreCardProps> = ({ icon, name, description, disabled
         group
       `}
     >
-      <div className="p-8 flex-grow flex flex-col items-center justify-center border-b-4 border-black dark:border-yellow-400 w-full">
-        <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-200">
+      <div className="p-6 sm:p-8 flex-grow flex flex-col items-center justify-center border-b-4 border-black dark:border-yellow-400 w-full">
+        <div className="text-5xl sm:text-6xl mb-6 group-hover:scale-110 transition-transform duration-200" aria-hidden="true">
           {icon}
         </div>
-        <h3 className="text-2xl font-black uppercase text-black dark:text-yellow-400">
+        <h3 className="text-xl sm:text-2xl font-black uppercase text-black dark:text-yellow-400">
           {name}
         </h3>
-        <p className="text-sm font-mono font-bold text-black dark:text-yellow-400 mt-2 bg-white/80 dark:bg-yellow-400/10 px-2 py-1 border-2 border-black dark:border-transparent">
+        <p className="text-xs sm:text-sm font-mono font-bold text-black dark:text-yellow-400 mt-2 bg-white/80 dark:bg-yellow-400/10 px-2 py-1 border-2 border-black dark:border-transparent break-words">
           {description}
         </p>
       </div>
@@ -85,12 +86,13 @@ const GenreSelection: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black pb-20">
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans selection:bg-black selection:text-white dark:selection:bg-yellow-400 dark:selection:text-black pb-20 overflow-x-hidden">
+      <SeoFor path="/genre-selection" />
       
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-black uppercase tracking-tighter">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tighter">
             Typocalypse
           </h1>
           <button
@@ -103,20 +105,20 @@ const GenreSelection: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-12 space-y-16">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12 sm:space-y-16">
         
         {/* Title Section */}
         <div className="text-center space-y-4">
-          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none inline-block border-4 border-black dark:border-yellow-400 bg-yellow-300 dark:bg-black px-6 py-4 shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_#facc15] transform -rotate-1">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none inline-block border-4 border-black dark:border-yellow-400 bg-yellow-300 dark:bg-black px-4 sm:px-6 py-4 shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_#facc15] transform -rotate-1">
             Select Protocol
           </h2>
-          <p className="font-mono text-lg font-bold text-black dark:text-yellow-400 uppercase mt-8 max-w-2xl mx-auto">
+          <p className="font-mono text-base sm:text-lg font-bold text-black dark:text-yellow-400 uppercase mt-8 max-w-2xl mx-auto break-words">
             Choose your environment. Calibrate your sensors. Survive the narrative.
           </p>
         </div>
 
         {/* Genre Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {genres.map((genre) => (
             <GenreCard
               key={genre.id}
@@ -131,30 +133,30 @@ const GenreSelection: React.FC = () => {
         </div>
 
         {/* Info Section - High Contrast Grid */}
-        <div className={`mt-16 border-4 border-black dark:border-yellow-400 bg-white dark:bg-black ${brutalShadowLight} ${brutalShadowDark}`}>
+        <div className={`mt-12 sm:mt-16 border-4 border-black dark:border-yellow-400 bg-white dark:bg-black ${brutalShadowLight} ${brutalShadowDark}`}>
           <div className="border-b-4 border-black dark:border-yellow-400 bg-black dark:bg-yellow-400 p-4">
-            <h3 className="text-xl font-black text-white dark:text-black uppercase tracking-widest">
+            <h3 className="text-lg sm:text-xl font-black text-white dark:text-black uppercase tracking-widest">
               SYSTEM MECHANICS
             </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 divide-y-4 md:divide-y-0 md:divide-x-4 divide-black dark:divide-yellow-400">
-            <div className="p-8 flex flex-col items-center text-center hover:bg-cyan-100 dark:hover:bg-yellow-400/10 transition-colors">
-              <div className="text-5xl mb-4">📖</div>
+            <div className="p-6 sm:p-8 flex flex-col items-center text-center hover:bg-cyan-100 dark:hover:bg-yellow-400/10 transition-colors">
+              <div className="text-5xl mb-4" aria-hidden="true">📖</div>
               <p className="text-black dark:text-yellow-400 font-mono text-sm uppercase font-bold">
                 <span className="block text-lg font-black mb-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1">Process Data</span> 
                 Read the narrative prompts tailored to your selected sector.
               </p>
             </div>
-            <div className="p-8 flex flex-col items-center text-center hover:bg-pink-100 dark:hover:bg-yellow-400/10 transition-colors">
-              <div className="text-5xl mb-4">⌨️</div>
+            <div className="p-6 sm:p-8 flex flex-col items-center text-center hover:bg-pink-100 dark:hover:bg-yellow-400/10 transition-colors">
+              <div className="text-5xl mb-4" aria-hidden="true">⌨️</div>
               <p className="text-black dark:text-yellow-400 font-mono text-sm uppercase font-bold">
                 <span className="block text-lg font-black mb-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1">Input Commands</span> 
                 Type accurately to survive. Errors equal system failure.
               </p>
             </div>
-            <div className="p-8 flex flex-col items-center text-center hover:bg-green-100 dark:hover:bg-yellow-400/10 transition-colors">
-              <div className="text-5xl mb-4">🎯</div>
+            <div className="p-6 sm:p-8 flex flex-col items-center text-center hover:bg-green-100 dark:hover:bg-yellow-400/10 transition-colors">
+              <div className="text-5xl mb-4" aria-hidden="true">🎯</div>
               <p className="text-black dark:text-yellow-400 font-mono text-sm uppercase font-bold">
                 <span className="block text-lg font-black mb-2 bg-black text-white dark:bg-yellow-400 dark:text-black px-2 py-1">Branch Reality</span> 
                 Your speed and choices directly alter the timeline's outcome.

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { SeoFor } from '../seo';
 
 // Upgrade a guest session into a permanent account, keeping all progress.
 const ClaimAccountPage: React.FC = () => {
@@ -20,6 +21,7 @@ const ClaimAccountPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return; // a second submit while in flight would double-post the claim
     setBusy(true);
     setError('');
     try {
@@ -32,24 +34,28 @@ const ClaimAccountPage: React.FC = () => {
   };
 
   const inputClass =
-    'w-full border-4 border-black dark:border-yellow-400 bg-white dark:bg-black px-4 py-3 font-mono text-lg outline-none focus:shadow-[4px_4px_0px_0px_#ff007f] dark:focus:shadow-[4px_4px_0px_0px_#fff]';
+    'w-full border-4 border-black dark:border-yellow-400 bg-white dark:bg-black px-4 py-3 font-mono text-base sm:text-lg outline-none focus:shadow-[4px_4px_0px_0px_#ff007f] dark:focus:shadow-[4px_4px_0px_0px_#fff]';
 
   return (
-    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans flex items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans flex items-center justify-center p-4 sm:p-6 relative overflow-x-hidden">
+      <SeoFor path="/claim" />
       <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      <div className={`relative z-10 w-full max-w-md bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-8 ${brutalShadow}`}>
-        <h1 className="text-3xl font-black uppercase tracking-tighter border-b-4 border-black dark:border-yellow-400 pb-3 mb-2">
+      <div className={`relative z-10 w-full max-w-md bg-white dark:bg-black border-4 border-black dark:border-yellow-400 p-5 sm:p-8 ${brutalShadow}`}>
+        <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter border-b-4 border-black dark:border-yellow-400 pb-3 mb-2">
           Claim your account
         </h1>
-        <p className="font-mono text-sm font-bold mb-6">
-          You are playing as <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-1">{user?.username}</span>.
+        <p className="font-mono text-sm font-bold mb-6 break-words">
+          You are playing as <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-1 break-all">{user?.username}</span>.
           Add an email and password to keep your progress forever.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">
-            <span className="font-black uppercase text-xs tracking-widest">Username</span>
+          <div>
+            <label htmlFor="claim-username" className="font-black uppercase text-xs tracking-widest block mb-1">Username</label>
             <input
+              id="claim-username"
+              name="username"
+              autoComplete="username"
               value={username}
               onChange={e => setUsername(e.target.value)}
               minLength={3}
@@ -57,22 +63,29 @@ const ClaimAccountPage: React.FC = () => {
               required
               className={inputClass}
             />
-          </label>
-          <label className="block">
-            <span className="font-black uppercase text-xs tracking-widest">Email</span>
+          </div>
+          <div>
+            <label htmlFor="claim-email" className="font-black uppercase text-xs tracking-widest block mb-1">Email</label>
             <input
+              id="claim-email"
+              name="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
               placeholder="you@wasteland.net"
               className={inputClass}
             />
-          </label>
-          <label className="block">
-            <span className="font-black uppercase text-xs tracking-widest">Password</span>
+          </div>
+          <div>
+            <label htmlFor="claim-password" className="font-black uppercase text-xs tracking-widest block mb-1">Password</label>
             <input
+              id="claim-password"
+              name="new-password"
               type="password"
+              autoComplete="new-password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               minLength={6}
@@ -80,25 +93,28 @@ const ClaimAccountPage: React.FC = () => {
               placeholder="at least 6 characters"
               className={inputClass}
             />
-          </label>
+          </div>
 
-          {error && (
-            <p className="font-mono font-bold text-sm text-white bg-red-600 border-2 border-black px-3 py-2">
-              {error}
-            </p>
-          )}
+          <div aria-live="polite">
+            {error && (
+              <p role="alert" className="font-mono font-bold text-sm uppercase text-black bg-red-500 border-4 border-black px-3 py-2 break-words">
+                &gt; {error}
+              </p>
+            )}
+          </div>
 
           <button
             type="submit"
             disabled={busy}
-            className={`w-full bg-green-300 dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-yellow-400 font-black text-xl uppercase py-4 transition-all ${brutalShadow} hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] dark:hover:shadow-[6px_6px_0px_0px_#facc15] active:translate-x-[8px] active:translate-y-[8px] active:shadow-none disabled:opacity-50`}
+            aria-busy={busy}
+            className={`w-full bg-green-300 dark:bg-black text-black dark:text-yellow-400 border-4 border-black dark:border-yellow-400 font-black text-lg sm:text-xl uppercase py-4 transition-all ${brutalShadow} hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#000] dark:hover:shadow-[6px_6px_0px_0px_#facc15] active:translate-x-[8px] active:translate-y-[8px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none`}
           >
             {busy ? 'Claiming…' : 'Claim account'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="w-full font-mono font-bold text-sm uppercase underline"
+            className="w-full font-mono font-bold text-sm uppercase underline py-2 min-h-[40px]"
           >
             Maybe later — keep playing as guest
           </button>
