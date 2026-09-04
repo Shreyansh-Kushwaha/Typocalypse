@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Panel, Btn, Tag } from '../multiplayer/ui';
+import { SeoFor } from '../seo';
 import { sfx } from '../sound';
 import { generateWords } from '../content/words';
 import { recordSession } from '../offline/queue';
@@ -54,11 +55,6 @@ const TimedTestPage: React.FC = () => {
   const [ladderKey, setLadderKey] = useState(0);
   const boxRef = useRef<HTMLDivElement>(null);
   const firstRender = useRef(true);
-
-  useEffect(() => {
-    document.title = 'Timed Test — Typocalypse';
-    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
-  }, []);
 
   useEffect(() => {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* storage unavailable */ }
@@ -136,28 +132,29 @@ const TimedTestPage: React.FC = () => {
   const ladderMode = settings.kind === 'time' ? `test${settings.seconds}` : 'test60';
 
   const pick = (active: boolean, label: string, onClick: () => void, color = 'bg-cyan-300') => (
-    <Btn key={label} tabIndex={-1} color={active ? color : 'bg-white'} className={`text-xs py-1 px-3 ${active ? '' : 'opacity-70'}`} onClick={onClick} aria-pressed={active}>
+    <Btn key={label} tabIndex={-1} color={active ? color : 'bg-white'} className={`text-xs py-2 px-3 ${active ? '' : 'opacity-70'}`} onClick={onClick} aria-pressed={active}>
       {label}
     </Btn>
   );
 
   return (
     <PracticeShell title="Timed" accent="Test" onBack={() => navigate('/dashboard')} online={online} queued={queued}>
+      <SeoFor path="/practice" />
       <div className="space-y-4">
-        {/* config bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1 items-center">
+        {/* config bar - wraps into rows of buttons rather than overflowing on a narrow phone */}
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Test settings">
+          <div className="flex flex-wrap gap-1 items-center">
             {pick(settings.kind === 'time', 'time', () => set({ kind: 'time' }), 'bg-pink-300')}
             {pick(settings.kind === 'words', 'words', () => set({ kind: 'words' }), 'bg-pink-300')}
           </div>
-          <span className="font-black text-lg select-none">/</span>
-          <div className="flex gap-1 items-center">
+          <span className="font-black text-lg select-none hidden sm:inline" aria-hidden="true">/</span>
+          <div className="flex flex-wrap gap-1 items-center">
             {settings.kind === 'time'
               ? DURATIONS.map(d => pick(settings.seconds === d, `${d}s`, () => set({ seconds: d })))
               : WORD_COUNTS.map(w => pick(settings.words === w, `${w}`, () => set({ words: w })))}
           </div>
-          <span className="font-black text-lg select-none">/</span>
-          <div className="flex gap-1 items-center">
+          <span className="font-black text-lg select-none hidden sm:inline" aria-hidden="true">/</span>
+          <div className="flex flex-wrap gap-1 items-center">
             {pick(settings.punctuation, 'punctuation', () => set({ punctuation: !settings.punctuation }), 'bg-green-300')}
             {pick(settings.numbers, 'numbers', () => set({ numbers: !settings.numbers }), 'bg-green-300')}
           </div>
@@ -194,11 +191,11 @@ const TimedTestPage: React.FC = () => {
         )}
 
         {r && (
-          <Panel className="space-y-4">
-            <div className="flex flex-wrap items-end gap-6">
+          <div aria-live="polite"><Panel className="space-y-4 p-4 sm:p-6">
+            <div className="flex flex-wrap items-end gap-4 sm:gap-6">
               <div>
                 <p className="font-black uppercase text-xs tracking-widest">Net WPM</p>
-                <p className="font-mono font-black text-7xl md:text-8xl leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>{r.netWpm}</p>
+                <p className="font-mono font-black text-6xl sm:text-7xl md:text-8xl leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>{r.netWpm}</p>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {[
@@ -225,17 +222,19 @@ const TimedTestPage: React.FC = () => {
 
             <WpmChart samples={r.samples} />
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Btn color="bg-cyan-300" onClick={reset} autoFocus>Next test</Btn>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+              <Btn color="bg-cyan-300" className="w-full sm:w-auto" onClick={reset} autoFocus disabled={save === 'saving'}>
+                {save === 'saving' ? 'Saving…' : 'Next test'}
+              </Btn>
               <span className="font-mono text-xs font-bold uppercase text-gray-600 dark:text-yellow-400/70">Tab or Enter for the next one</span>
-              <span className="font-mono text-xs font-bold uppercase ml-auto">
+              <span className="font-mono text-xs font-bold uppercase sm:ml-auto">
                 {save === 'saving' && 'saving…'}
                 {save === 'saved' && 'saved to your history'}
                 {save === 'queued' && 'saved offline — will sync'}
-                {save === 'failed' && <span className="text-red-600 dark:text-red-400">could not save</span>}
+                {save === 'failed' && <span className="text-red-600 dark:text-red-400">could not save this run</span>}
               </span>
             </div>
-          </Panel>
+          </Panel></div>
         )}
 
         <LadderPanel mode={ladderMode} title={`Ladder · ${ladderMode}`} online={online} refreshKey={ladderKey} />

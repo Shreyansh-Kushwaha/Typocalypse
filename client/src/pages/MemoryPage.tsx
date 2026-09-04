@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Panel, Btn, Tag, brutal } from '../multiplayer/ui';
+import { SeoFor } from '../seo';
 import { sfx } from '../sound';
 import { copyText } from '../share';
 import { ArcadeShell, HowTo, Stat, DiffView, DiffLegend } from '../arcade/ui';
@@ -23,6 +24,7 @@ interface RoundResult {
 }
 
 type Phase = 'intro' | 'reveal' | 'recall' | 'result' | 'summary';
+type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 const FAIL_BELOW = 60;
 const revealMsFor = (words: number) => Math.max(4000, 1200 * words);
 
@@ -44,16 +46,22 @@ const MemoryPage: React.FC = () => {
   const [revealPct, setRevealPct] = useState(100);
   const [ended, setEnded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [save, setSave] = useState<SaveState>('idle');
   const revealEndsAt = useRef(0);
   const recallStart = useRef(0);
   const boxRef = useRef<HTMLTextAreaElement>(null);
+  const lastPayload = useRef<Record<string, unknown> | null>(null);
 
   const passage = session[round];
 
-  useEffect(() => {
-    document.title = 'Last Words — Typocalypse';
-    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
-  }, []);
+  const persist = (payload: Record<string, unknown>) => {
+    lastPayload.current = payload;
+    setSave('saving');
+    axios.post('/stats/session', payload)
+      .then(() => setSave('saved'))
+      .catch(() => setSave('failed'));
+  };
 
   // reveal countdown bar
   useEffect(() => {
@@ -82,6 +90,7 @@ const MemoryPage: React.FC = () => {
     setRound(0);
     setEnded(false);
     setCopied(false);
+    setSave('idle');
     startReveal(0, fresh);
   };
 
@@ -116,7 +125,7 @@ const MemoryPage: React.FC = () => {
     else if (diff.accuracy >= 95) sfx.success();
     else sfx.pop();
     setPhase('result');
-    axios.post('/stats/session', {
+    persist({
       context: 'memory',
       mode: `words${passage.words}`,
       wpm,
@@ -126,7 +135,7 @@ const MemoryPage: React.FC = () => {
       durationMs,
       keyStats: {},
       localHour: new Date().getHours(),
-    }).catch(() => {});
+    });
   };
 
   const next = () => {
@@ -139,6 +148,7 @@ const MemoryPage: React.FC = () => {
 
   return (
     <ArcadeShell title="Last" accent="Words" onBack={() => navigate('/dashboard')}>
+      <SeoFor path="/arcade/memory" />
       {phase === 'intro' && (
         <HowTo
           icon="🧠"
@@ -151,13 +161,13 @@ const MemoryPage: React.FC = () => {
             `Score under ${FAIL_BELOW}% and the session ends there - the words are gone.`,
           ]}
         >
-          <Btn color="bg-purple-300" className="text-2xl px-10 py-4" onClick={startSession}>Begin</Btn>
+          <Btn color="bg-purple-300" className="w-full sm:w-auto text-xl sm:text-2xl px-6 sm:px-10 py-4" onClick={startSession}>Begin</Btn>
         </HowTo>
       )}
 
       {phase !== 'intro' && phase !== 'summary' && passage && (
         <div className="flex flex-wrap items-center gap-2">
-          <Tag className="bg-purple-300 text-lg">🧠 ROUND {round + 1} / {ROUNDS}</Tag>
+          <Tag className="bg-purple-300 text-base sm:text-lg"><span aria-hidden="true">🧠 </span>ROUND {round + 1} / {ROUNDS}</Tag>
           <Tag>{passage.words} words</Tag>
           <Tag>{passage.text.length} chars</Tag>
           {rounds.length > 0 && <Tag>avg {Math.round(rounds.reduce((a, r) => a + r.diff.accuracy, 0) / rounds.length)}%</Tag>}
@@ -165,16 +175,16 @@ const MemoryPage: React.FC = () => {
       )}
 
       {phase === 'reveal' && passage && (
-        <Panel className="space-y-4">
+        <Panel className="space-y-4 p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <span className="font-black uppercase text-xs tracking-widest whitespace-nowrap">Memorise</span>
-            <div className="flex-1 h-4 border-2 border-black dark:border-yellow-400 bg-gray-100 dark:bg-black overflow-hidden">
+            <span className="font-black uppercase text-xs tracking-widest shrink-0">Memorise</span>
+            <div className="flex-1 min-w-0 h-4 border-2 border-black dark:border-yellow-400 bg-gray-100 dark:bg-black overflow-hidden">
               <div className="h-full bg-purple-400 dark:bg-yellow-400" style={{ width: `${revealPct}%`, transition: 'width 50ms linear' }} />
             </div>
           </div>
-          <p className="font-mono text-lg md:text-xl leading-relaxed select-none" onCopy={e => e.preventDefault()}>{passage.text}</p>
-          <div className="flex justify-end">
-            <Btn className="text-xs py-1" onClick={beginRecall}>Got it — hide it now</Btn>
+          <p className="font-mono text-base sm:text-lg md:text-xl leading-relaxed select-none break-words" onCopy={e => e.preventDefault()}>{passage.text}</p>
+          <div className="flex sm:justify-end">
+            <Btn className="w-full sm:w-auto text-xs py-2" onClick={beginRecall}>Got it — hide it now</Btn>
           </div>
         </Panel>
       )}
@@ -193,17 +203,18 @@ const MemoryPage: React.FC = () => {
             autoCapitalize="off"
             autoCorrect="off"
             placeholder="from memory…"
-            className={`w-full font-mono text-lg md:text-xl leading-relaxed p-4 bg-white dark:bg-black text-black dark:text-yellow-400 ${brutal.border} outline-none resize-y focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff]`}
+            aria-label="Type the passage you just read, from memory"
+            className={`w-full font-mono text-base sm:text-lg md:text-xl leading-relaxed p-3 sm:p-4 bg-white dark:bg-black text-black dark:text-yellow-400 ${brutal.border} outline-none resize-y focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff]`}
           />
-          <div className="flex flex-wrap items-center gap-3">
-            <Btn color="bg-purple-300" onClick={submit}>Done</Btn>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+            <Btn color="bg-purple-300" className="w-full sm:w-auto" onClick={submit}>Done</Btn>
             <span className="font-mono text-xs font-bold">{wordsTyped} / {passage.words} words</span>
           </div>
         </div>
       )}
 
       {phase === 'result' && last && (
-        <Panel className="space-y-4">
+        <div aria-live="polite"><Panel className="space-y-4 p-4 sm:p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <Stat label="Word accuracy" value={`${last.diff.accuracy}%`} color={last.diff.accuracy >= 95 ? 'bg-green-300' : last.diff.accuracy >= FAIL_BELOW ? 'bg-yellow-300' : 'bg-red-300'} />
             <Stat label="Char accuracy" value={`${last.charAcc}%`} />
@@ -213,40 +224,66 @@ const MemoryPage: React.FC = () => {
           <DiffView tokens={last.diff.tokens} />
           <DiffLegend />
           {ended ? (
-            <p className="text-2xl font-black uppercase text-red-600 dark:text-red-400">The words are gone.</p>
+            <p className="text-xl sm:text-2xl font-black uppercase text-red-600 dark:text-red-400">The words are gone.</p>
           ) : last.diff.accuracy >= 95 ? (
-            <p className="text-xl font-black uppercase text-green-700 dark:text-green-400">Photographic.</p>
+            <p className="text-lg sm:text-xl font-black uppercase text-green-700 dark:text-green-400">Photographic.</p>
           ) : null}
-          <Btn autoFocus color="bg-purple-300" className="text-xl px-8 py-3" onClick={next}>
-            {ended || round + 1 >= ROUNDS ? 'See the summary' : 'Next passage'}
-          </Btn>
-        </Panel>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Btn autoFocus color="bg-purple-300" className="w-full sm:w-auto text-lg sm:text-xl px-6 sm:px-8 py-3" onClick={next}>
+              {ended || round + 1 >= ROUNDS ? 'See the summary' : 'Next passage'}
+            </Btn>
+            <span className="font-mono text-xs font-bold uppercase text-gray-600 dark:text-yellow-400/70">
+              {save === 'saving' && 'saving this round…'}
+              {save === 'saved' && 'saved to your history'}
+              {save === 'failed' && (
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-red-600 dark:text-red-400">could not save this round</span>
+                  <Btn
+                    color="bg-yellow-300"
+                    className="text-[10px] py-1 px-2"
+                    onClick={() => { if (lastPayload.current) persist(lastPayload.current); }}
+                  >
+                    Retry
+                  </Btn>
+                </span>
+              )}
+            </span>
+          </div>
+        </Panel></div>
       )}
 
       {phase === 'summary' && rounds.length > 0 && (
-        <Panel className="text-center py-8 space-y-4">
-          <p className="text-4xl">{ended ? '🕯️' : '🧠'}</p>
-          <p className="text-3xl font-black uppercase">{ended ? `Memory failed on round ${rounds.length}` : 'All five passages recalled'}</p>
-          <div className="grid grid-cols-3 gap-2 max-w-xl mx-auto">
+        <div aria-live="polite"><Panel className="text-center p-4 sm:p-6 sm:py-8 space-y-4">
+          <p className="text-4xl" aria-hidden="true">{ended ? '🕯️' : '🧠'}</p>
+          <p className="text-2xl sm:text-3xl font-black uppercase">{ended ? `Memory failed on round ${rounds.length}` : 'All five passages recalled'}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-xl mx-auto">
             <Stat label="Average" value={`${Math.round(rounds.reduce((a, r) => a + r.diff.accuracy, 0) / rounds.length)}%`} color="bg-purple-300" />
             <Stat label="Best round" value={`${rounds.reduce((a, r) => Math.max(a, r.diff.accuracy), 0)}%`} color="bg-green-300" />
             <Stat label="Longest recalled" value={`${rounds.filter(r => r.diff.accuracy >= FAIL_BELOW).reduce((a, r) => Math.max(a, r.passage.words), 0)}w`} color="bg-cyan-300" />
           </div>
-          <div className="text-left max-w-xl mx-auto font-mono text-sm space-y-1">
+          <div className="text-left max-w-xl mx-auto font-mono text-xs sm:text-sm space-y-1">
             {rounds.map((r, i) => (
-              <div key={i} className="flex justify-between border-b border-black/10 dark:border-yellow-400/10 py-1">
+              <div key={i} className="flex flex-wrap justify-between gap-2 border-b border-black/10 dark:border-yellow-400/10 py-1">
                 <span>Round {i + 1} · {r.passage.words} words</span>
                 <span className="font-black">{r.diff.accuracy}% · {r.wpm} wpm</span>
               </div>
             ))}
           </div>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Btn color="bg-purple-300" className="text-xl px-8 py-3" onClick={startSession} autoFocus>Run it back</Btn>
-            <Btn color="bg-green-300" onClick={async () => setCopied(await copyText(shareLine(rounds)))}>
-              {copied ? '✓ Copied' : '📋 Copy result'}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-center sm:flex-wrap">
+            <Btn color="bg-purple-300" className="w-full sm:w-auto text-lg sm:text-xl px-6 sm:px-8 py-3" onClick={startSession} autoFocus>Run it back</Btn>
+            <Btn
+              color="bg-green-300"
+              className="w-full sm:w-auto"
+              disabled={copying}
+              onClick={async () => {
+                setCopying(true);
+                try { setCopied(await copyText(shareLine(rounds))); } finally { setCopying(false); }
+              }}
+            >
+              {copying ? 'Copying…' : copied ? '✓ Copied' : <><span aria-hidden="true">📋 </span>Copy result</>}
             </Btn>
           </div>
-        </Panel>
+        </Panel></div>
       )}
     </ArcadeShell>
   );

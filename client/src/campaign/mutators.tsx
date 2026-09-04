@@ -50,8 +50,10 @@ export const MutatorTags: React.FC<{ mutators: MutatorKey[]; iconsOnly?: boolean
     {mutators.filter(m => m !== 'none').map(m => (
       <span
         key={m}
+        role="img"
+        aria-label={`${MUTATOR_INFO[m].name} mutator: ${MUTATOR_INFO[m].blurb}`}
         title={`${MUTATOR_INFO[m].name}: ${MUTATOR_INFO[m].blurb}`}
-        className={iconsOnly ? 'text-base leading-none' : 'font-mono text-[10px] font-bold uppercase border-2 border-black dark:border-yellow-400 px-1 leading-4 bg-white dark:bg-black'}
+        className={iconsOnly ? 'text-base leading-none' : 'font-mono text-[10px] font-bold uppercase border-2 border-black dark:border-yellow-400 px-1 leading-4 bg-white dark:bg-black break-words'}
       >
         {MUTATOR_INFO[m].icon}{iconsOnly ? '' : ` ${MUTATOR_INFO[m].name}`}
       </span>
@@ -64,16 +66,16 @@ export const TimeBar: React.FC<{ leftMs: number; limitMs: number }> = ({ leftMs,
   const pct = Math.max(0, Math.min(100, (leftMs / Math.max(1, limitMs)) * 100));
   const danger = pct < 25;
   return (
-    <div className="flex items-center gap-3">
-      <span className={`text-2xl ${danger ? 'animate-bounce' : ''}`}>💣</span>
-      <div className="flex-1 h-6 border-4 border-black dark:border-yellow-400 bg-gray-100 dark:bg-black overflow-hidden">
+    <div className="flex items-center gap-2 sm:gap-3" role="timer" aria-label="Time left on the timebomb">
+      <span aria-hidden="true" className={`text-2xl shrink-0 ${danger ? 'animate-bounce' : ''}`}>💣</span>
+      <div className="flex-1 min-w-0 h-6 border-4 border-black dark:border-yellow-400 bg-gray-100 dark:bg-black overflow-hidden">
         <div
           className={`h-full ${danger ? 'bg-red-500' : 'bg-orange-400 dark:bg-yellow-400'}`}
           style={{ width: `${pct}%`, transition: 'width 100ms linear' }}
         />
       </div>
       <span
-        className={`font-mono font-black w-16 text-right ${danger ? 'text-red-600 dark:text-red-400 animate-pulse' : ''}`}
+        className={`font-mono font-black text-sm sm:text-base w-14 sm:w-16 text-right shrink-0 ${danger ? 'text-red-600 dark:text-red-400 animate-pulse' : ''}`}
         style={{ fontVariantNumeric: 'tabular-nums' }}
       >
         {(Math.max(0, leftMs) / 1000).toFixed(1)}s

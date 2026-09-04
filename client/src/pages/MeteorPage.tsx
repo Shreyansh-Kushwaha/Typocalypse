@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Panel, Btn, Tag, brutal } from '../multiplayer/ui';
+import { SeoFor } from '../seo';
 import { sfx } from '../sound';
 import { copyText } from '../share';
 import { ArcadeShell, HowTo, Stat, Ladder } from '../arcade/ui';
@@ -78,7 +79,7 @@ const KIND_STYLE: Record<Kind, string> = {
   gold: 'border-yellow-500 bg-yellow-300 dark:bg-yellow-400 dark:text-black',
   repair: 'border-green-600 bg-green-300 dark:bg-green-400 dark:text-black',
   slow: 'border-cyan-600 bg-cyan-300 dark:bg-cyan-400 dark:text-black',
-  boss: 'border-purple-700 bg-purple-300 dark:bg-purple-400 dark:text-black text-lg md:text-xl',
+  boss: 'border-purple-700 bg-purple-300 dark:bg-purple-400 dark:text-black text-sm sm:text-lg md:text-xl',
 };
 const KIND_ICON: Record<Kind, string> = { normal: '☄️', gold: '⭐', repair: '🔧', slow: '🐌', boss: '💀' };
 
@@ -145,16 +146,17 @@ const MeteorPage: React.FC = () => {
   const [serverBest, setServerBest] = useState<{ score: number; rank: number } | null>(null);
   const [localBest, setLocalBest] = useState(readLocalBest);
   const [ladder, setLadder] = useState<LadderRow[]>([]);
+  const [ladderState, setLadderState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [copied, setCopied] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const loadLadder = useCallback(() => {
-    axios.get('/arcade/leaderboard', { params: { game: 'meteor' } }).then(res => setLadder(res.data.rows)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    document.title = 'Meteor Shower — Typocalypse';
-    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
+    setLadderState('loading');
+    axios.get('/arcade/leaderboard', { params: { game: 'meteor' } })
+      .then(res => { setLadder(res.data.rows || []); setLadderState('ready'); })
+      .catch(() => setLadderState('error'));
   }, []);
 
   useEffect(() => {
@@ -175,6 +177,7 @@ const MeteorPage: React.FC = () => {
     setResult(r);
     setServer(null);
     setCopied(false);
+    setSaving(false);
     setError('');
     setPhase('over');
     const prev = readLocalBest();
@@ -308,6 +311,7 @@ const MeteorPage: React.FC = () => {
 
   return (
     <ArcadeShell title="Meteor" accent="Shower" onBack={() => navigate('/dashboard')} width="max-w-5xl">
+      <SeoFor path="/arcade/meteor" />
       {phase === 'intro' && (
         <HowTo
           icon="☄️"
@@ -320,8 +324,8 @@ const MeteorPage: React.FC = () => {
             'It never ends - every 15 seconds the wave gets faster, denser and longer. The window loses focus? The game pauses.',
           ]}
         >
-          <div className="flex flex-wrap items-center gap-4">
-            <Btn color="bg-orange-300" className="text-2xl px-10 py-4" onClick={start}>Man the bunker</Btn>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
+            <Btn color="bg-orange-300" className="w-full sm:w-auto text-xl sm:text-2xl px-6 sm:px-10 py-4" onClick={start}>Man the bunker</Btn>
             {(serverBest || localBest > 0) && (
               <span className="font-mono text-sm font-bold">
                 Your best: {Math.max(localBest, serverBest?.score || 0).toLocaleString()}
@@ -334,7 +338,7 @@ const MeteorPage: React.FC = () => {
 
       {phase !== 'intro' && (
         <>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
             <Stat label="Score" value={s.score.toLocaleString()} color="bg-orange-300" />
             <Stat label="Combo" value={<span className={mult >= 3 ? 'text-pink-600 dark:text-pink-400' : ''}>x{mult}</span>} color="bg-pink-300" />
             <Stat label="Wave" value={s.wave} color="bg-cyan-300" />
@@ -342,12 +346,12 @@ const MeteorPage: React.FC = () => {
             <Stat label="Kills" value={s.kills} />
             <Stat label="Kills / min" value={kpm} />
           </div>
-          <div className="flex items-center gap-3">
-            <span className="font-black uppercase text-sm whitespace-nowrap">Bunker</span>
-            <div className="flex-1 h-6 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="font-black uppercase text-xs sm:text-sm shrink-0">Bunker</span>
+            <div className="flex-1 min-w-0 h-6 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
               <div className={`h-full ${hpColor} transition-all duration-150`} style={{ width: `${Math.max(0, s.hp)}%` }} />
             </div>
-            <span className="font-mono font-black w-16 text-right">{Math.max(0, s.hp)}/{START_HP}</span>
+            <span className="font-mono font-black text-sm sm:text-base w-14 sm:w-16 text-right shrink-0">{Math.max(0, s.hp)}/{START_HP}</span>
           </div>
         </>
       )}
@@ -358,17 +362,23 @@ const MeteorPage: React.FC = () => {
           tabIndex={0}
           onKeyDown={handleKey}
           onClick={resume}
+          role="application"
+          aria-label="Meteor Shower playfield — type the falling words"
           className={`relative w-full aspect-[16/10] min-h-[300px] max-h-[560px] bg-white dark:bg-black ${brutal.border} ${brutal.shadowSm} outline-none overflow-hidden select-none focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] ${
             s.flash?.kind === 'hit' ? 'bg-red-200 dark:bg-red-950' : s.flash?.kind === 'miss' ? 'animate-[typoshake_0.2s_linear]' : ''
           }`}
         >
-          {/* combo, big */}
-          <div className={`absolute top-2 right-3 font-black text-5xl md:text-7xl pointer-events-none transition-opacity ${mult > 1 ? 'opacity-30' : 'opacity-0'} ${mult >= 4 ? 'text-pink-600' : ''}`}>
+          {/* combo, big - decorative, the Combo tile above carries the real number */}
+          <div aria-hidden="true" className={`absolute top-2 right-3 font-black text-4xl sm:text-5xl md:text-7xl pointer-events-none transition-opacity ${mult > 1 ? 'opacity-30' : 'opacity-0'} ${mult >= 4 ? 'text-pink-600' : ''}`}>
             x{mult}
           </div>
-          {slowActive && <div className="absolute top-2 left-3 font-black uppercase text-cyan-600 dark:text-cyan-400 animate-pulse pointer-events-none">🐌 slow-mo</div>}
+          {slowActive && (
+            <div className="absolute top-2 left-3 font-black uppercase text-xs sm:text-base text-cyan-600 dark:text-cyan-400 animate-pulse pointer-events-none">
+              <span aria-hidden="true">🐌 </span>slow-mo
+            </div>
+          )}
           {s.banner && (
-            <div className="absolute inset-x-0 top-1/3 text-center font-black text-3xl md:text-5xl uppercase pointer-events-none animate-pulse">{s.banner.text}</div>
+            <div aria-hidden="true" className="absolute inset-x-0 top-1/3 text-center font-black text-2xl sm:text-3xl md:text-5xl uppercase pointer-events-none animate-pulse">{s.banner.text}</div>
           )}
 
           {s.meteors.map(m => {
@@ -378,12 +388,12 @@ const MeteorPage: React.FC = () => {
             return (
               <div
                 key={m.id}
-                className={`absolute font-mono text-sm md:text-base px-2 py-0.5 border-2 whitespace-nowrap ${KIND_STYLE[m.kind]} ${
+                className={`absolute font-mono text-xs sm:text-sm md:text-base px-1.5 sm:px-2 py-0.5 border-2 whitespace-nowrap max-w-[92%] ${KIND_STYLE[m.kind]} ${
                   mine ? 'ring-4 ring-pink-500 dark:ring-white z-10' : danger ? 'animate-pulse' : ''
                 }`}
                 style={{ top: `${m.y}%`, left: `${m.x}%`, transform: 'translateX(-50%)', willChange: 'top' }}
               >
-                {KIND_ICON[m.kind]} <span className="bg-green-400 text-black font-black">{m.text.slice(0, typed)}</span>{m.text.slice(typed)}
+                <span aria-hidden="true">{KIND_ICON[m.kind]} </span><span className="bg-green-400 text-black font-black">{m.text.slice(0, typed)}</span>{m.text.slice(typed)}
               </div>
             );
           })}
@@ -397,14 +407,14 @@ const MeteorPage: React.FC = () => {
             </div>
           ))}
 
-          <div className="absolute bottom-0 left-0 right-0 border-t-4 border-black dark:border-yellow-400 bg-[#f4f4f0] dark:bg-black text-center font-mono text-[10px] md:text-xs font-black py-1 uppercase" style={{ height: `${100 - LAND_Y}%` }}>
-            ▙▄▄▄ Bunker — click here and type · esc drops your target ▄▄▄▟
+          <div className="absolute bottom-0 left-0 right-0 border-t-4 border-black dark:border-yellow-400 bg-[#f4f4f0] dark:bg-black text-center font-mono text-[10px] md:text-xs font-black py-1 px-1 uppercase leading-tight overflow-hidden" style={{ height: `${100 - LAND_Y}%` }}>
+            <span aria-hidden="true" className="hidden sm:inline">▙▄▄▄ </span>Bunker — click here and type<span className="hidden sm:inline"> · esc drops your target</span><span aria-hidden="true" className="hidden sm:inline"> ▄▄▄▟</span>
           </div>
 
           {s.paused && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center cursor-pointer">
-              <div className="text-center text-white">
-                <p className="text-4xl font-black uppercase">Paused</p>
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center cursor-pointer" role="status">
+              <div className="text-center text-white px-4">
+                <p className="text-3xl sm:text-4xl font-black uppercase">Paused</p>
                 <p className="font-mono text-sm font-bold mt-2">click to resume</p>
               </div>
             </div>
@@ -413,10 +423,10 @@ const MeteorPage: React.FC = () => {
       )}
 
       {phase === 'over' && result && (
-        <Panel className="text-center py-8">
-          <p className="text-4xl mb-2">💥</p>
-          <p className="text-3xl font-black uppercase mb-1">The bunker fell on wave {result.wave}</p>
-          <p className="font-mono font-black text-4xl mb-4" style={{ fontVariantNumeric: 'tabular-nums' }}>{result.score.toLocaleString()} pts</p>
+        <div aria-live="polite"><Panel className="text-center p-4 sm:p-6 sm:py-8">
+          <p className="text-4xl mb-2" aria-hidden="true">💥</p>
+          <p className="text-2xl sm:text-3xl font-black uppercase mb-1">The bunker fell on wave {result.wave}</p>
+          <p className="font-mono font-black text-3xl sm:text-4xl mb-4" style={{ fontVariantNumeric: 'tabular-nums' }}>{result.score.toLocaleString()} pts</p>
           <div className="flex flex-wrap justify-center gap-2 mb-4">
             <Tag>{result.kills} kills</Tag>
             <Tag>{Math.round(result.durationMs / 1000)}s survived</Tag>
@@ -431,18 +441,55 @@ const MeteorPage: React.FC = () => {
               </>
             )}
           </div>
-          {!server && !error && <p className="font-mono text-xs font-bold animate-pulse mb-2">saving to the ladder…</p>}
-          {error && <p className="font-mono text-sm font-bold text-red-600 dark:text-red-400 mb-2">{error}</p>}
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Btn color="bg-orange-300" className="text-xl px-8 py-3" onClick={start} autoFocus>Play again</Btn>
-            <Btn color="bg-green-300" onClick={async () => setCopied(await copyText(shareLine(result)))}>
-              {copied ? '✓ Copied' : '📋 Copy result'}
+          {!server && !error && <p className="font-mono text-xs font-bold animate-pulse mb-2">Saving your run to the ladder…</p>}
+          {error && (
+            <div className="mb-2 space-y-2">
+              <p className="font-mono text-sm font-bold text-red-600 dark:text-red-400">{error}</p>
+              <Btn
+                color="bg-yellow-300"
+                className="w-full sm:w-auto text-xs py-2"
+                disabled={saving}
+                onClick={() => {
+                  setSaving(true);
+                  setError('');
+                  axios.post('/arcade/score', { game: 'meteor', score: result.score, wave: result.wave, kills: result.kills, durationMs: result.durationMs })
+                    .then(res => {
+                      setServer({ best: res.data.best.score, isNewBest: res.data.isNewBest, rank: res.data.rank, players: res.data.players });
+                      setServerBest({ score: res.data.best.score, rank: res.data.rank });
+                      loadLadder();
+                    })
+                    .catch(err => setError(err?.response?.data?.error || 'Could not save your run'))
+                    .finally(() => setSaving(false));
+                }}
+              >
+                {saving ? 'Retrying…' : 'Retry save'}
+              </Btn>
+            </div>
+          )}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-center sm:flex-wrap">
+            <Btn color="bg-orange-300" className="w-full sm:w-auto text-lg sm:text-xl px-6 sm:px-8 py-3" onClick={start} autoFocus>Play again</Btn>
+            <Btn
+              color="bg-green-300"
+              className="w-full sm:w-auto"
+              disabled={copying}
+              onClick={async () => {
+                setCopying(true);
+                try { setCopied(await copyText(shareLine(result))); } finally { setCopying(false); }
+              }}
+            >
+              {copying ? 'Copying…' : copied ? '✓ Copied' : <><span aria-hidden="true">📋 </span>Copy result</>}
             </Btn>
           </div>
-        </Panel>
+        </Panel></div>
       )}
 
-      <Ladder rows={ladder} limit={10} />
+      <Ladder
+        rows={ladder}
+        limit={10}
+        loading={ladderState === 'loading'}
+        error={ladderState === 'error' ? 'Could not load the global ladder.' : undefined}
+        onRetry={loadLadder}
+      />
     </ArcadeShell>
   );
 };

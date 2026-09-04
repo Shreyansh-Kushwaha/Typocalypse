@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Panel, Btn, Tag } from '../multiplayer/ui';
+import { SeoFor } from '../seo';
 import { sfx } from '../sound';
 import { LANGUAGES, LANGUAGE_LABEL, getSnippet, randomSnippetIndex } from '../content/snippets';
 import type { Language } from '../content/snippets';
@@ -37,11 +38,6 @@ const CodeModePage: React.FC = () => {
   const [ladderKey, setLadderKey] = useState(0);
   const boxRef = useRef<HTMLDivElement>(null);
   const target = getSnippet(language, index);
-
-  useEffect(() => {
-    document.title = 'Code Mode — Typocalypse';
-    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
-  }, []);
 
   useEffect(() => {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language })); } catch { /* storage unavailable */ }
@@ -111,14 +107,15 @@ const CodeModePage: React.FC = () => {
 
   return (
     <PracticeShell title="Code" accent="Mode" onBack={() => navigate('/dashboard')} online={online} queued={queued}>
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-1">
+      <SeoFor path="/practice/code" />
+      <div className="space-y-4 min-w-0">
+        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Snippet language">
           {LANGUAGES.map(l => (
             <Btn
               key={l}
               tabIndex={-1}
               color={language === l ? 'bg-purple-300' : 'bg-white'}
-              className={`text-xs py-1 px-3 ${language === l ? '' : 'opacity-70'}`}
+              className={`text-xs py-2 px-3 ${language === l ? '' : 'opacity-70'}`}
               onClick={() => changeLanguage(l)}
               aria-pressed={language === l}
             >
@@ -131,7 +128,7 @@ const CodeModePage: React.FC = () => {
           How to: type the code exactly, Enter for a new line (indentation is skipped for you), backspace fixes the current line. Esc restarts, Tab is trapped.
         </p>
 
-        <div className="flex items-center gap-3 font-mono font-black text-2xl" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-mono font-black text-xl sm:text-2xl" style={{ fontVariantNumeric: 'tabular-nums' }}>
           <span>{t.secondsElapsed}s</span>
           <Tag>{lineCount} lines</Tag>
           {t.started && !t.finished && <Tag className="bg-yellow-300 dark:bg-transparent animate-pulse">live</Tag>}
@@ -154,11 +151,11 @@ const CodeModePage: React.FC = () => {
         )}
 
         {r && (
-          <Panel className="space-y-4">
-            <div className="flex flex-wrap items-end gap-6">
+          <div aria-live="polite"><Panel className="space-y-4 p-4 sm:p-6">
+            <div className="flex flex-wrap items-end gap-4 sm:gap-6">
               <div>
                 <p className="font-black uppercase text-xs tracking-widest">WPM</p>
-                <p className="font-mono font-black text-7xl md:text-8xl leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>{r.wpm}</p>
+                <p className="font-mono font-black text-6xl sm:text-7xl md:text-8xl leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>{r.wpm}</p>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {[
@@ -183,18 +180,20 @@ const CodeModePage: React.FC = () => {
 
             {r.samples.length > 1 && <WpmChart samples={r.samples} />}
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Btn color="bg-cyan-300" onClick={nextSnippet} autoFocus>Next snippet</Btn>
-              <Btn color="bg-white" onClick={sameSnippet}>Same snippet</Btn>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+              <Btn color="bg-cyan-300" className="w-full sm:w-auto" onClick={nextSnippet} autoFocus disabled={save === 'saving'}>
+                {save === 'saving' ? 'Saving…' : 'Next snippet'}
+              </Btn>
+              <Btn color="bg-white" className="w-full sm:w-auto" onClick={sameSnippet} disabled={save === 'saving'}>Same snippet</Btn>
               <span className="font-mono text-xs font-bold uppercase text-gray-600 dark:text-yellow-400/70">Tab or Enter for the next one</span>
-              <span className="font-mono text-xs font-bold uppercase ml-auto">
+              <span className="font-mono text-xs font-bold uppercase sm:ml-auto">
                 {save === 'saving' && 'saving…'}
                 {save === 'saved' && 'saved to your history'}
                 {save === 'queued' && 'saved offline — will sync'}
-                {save === 'failed' && <span className="text-red-600 dark:text-red-400">could not save</span>}
+                {save === 'failed' && <span className="text-red-600 dark:text-red-400">could not save this run</span>}
               </span>
             </div>
-          </Panel>
+          </Panel></div>
         )}
 
         <LadderPanel mode="code" title="Code ladder · all languages" online={online} refreshKey={ladderKey} />
