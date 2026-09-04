@@ -49,28 +49,30 @@ const SprintGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
     onDone: () => sendGameEvent('progress', { chars: leg?.text.length || 0, errors: 0, done: true }),
   });
 
-  if (!leg) return <p className="text-center font-mono font-black animate-pulse mt-10">LOADING RACE…</p>;
+  if (!leg) return <p role="status" aria-live="polite" className="text-center font-mono font-black animate-pulse mt-10 px-4 break-words">LOADING RACE…</p>;
 
   const me = lanes.find(l => l.userId === myId);
   const iChoose = choosing && me && choosing.chooser === me.name;
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-red-300 text-lg">🏁 LEG {leg.leg}/{leg.totalLegs}</Tag>
-        {now < leg.startAt && <span className="font-mono text-2xl font-black animate-pulse">GET READY… {Math.ceil((leg.startAt - now) / 1000)}</span>}
-        {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1">{banner}</span>}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-red-300 text-base sm:text-lg"><span aria-hidden="true">🏁</span> LEG {leg.leg}/{leg.totalLegs}</Tag>
+        {now < leg.startAt && <span className="font-mono text-xl sm:text-2xl font-black animate-pulse">GET READY… {Math.ceil((leg.startAt - now) / 1000)}</span>}
+        <span aria-live="polite" className="min-w-0">
+          {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 break-words inline-block">{banner}</span>}
+        </span>
       </div>
 
       {choosing ? (
         <Panel className="text-center py-8">
-          <p className="text-2xl font-black uppercase mb-4">
+          <p className="text-xl sm:text-2xl font-black uppercase mb-4 break-words">
             {iChoose ? 'You won the leg — steer the story' : `${choosing.chooser} is choosing the path…`}
           </p>
           {iChoose && (
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               {choosing.choices.map(c => (
-                <Btn key={c} color="bg-green-300" className="text-lg" onClick={() => sendGameEvent('choice', { choice: c })}>
+                <Btn key={c} color="bg-green-300" className="w-full md:w-auto text-base sm:text-lg" onClick={() => sendGameEvent('choice', { choice: c })}>
                   {c}
                 </Btn>
               ))}

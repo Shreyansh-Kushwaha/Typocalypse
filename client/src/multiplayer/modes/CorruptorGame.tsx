@@ -90,20 +90,22 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
     },
   });
 
-  if (!role || !chapter) return <p className="text-center font-mono font-black animate-pulse mt-10">DEALING ROLES…</p>;
+  if (!role || !chapter) return <p role="status" aria-live="polite" className="text-center font-mono font-black animate-pulse mt-10 px-4 break-words">DEALING ROLES…</p>;
 
   const others = room.players.filter(p => p.userId !== myId);
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-yellow-300 text-lg">🎭 CHAPTER {chapter.chapter}/{chapter.totalChapters}</Tag>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-yellow-300 text-base sm:text-lg"><span aria-hidden="true">🎭</span> CHAPTER {chapter.chapter}/{chapter.totalChapters}</Tag>
         <Tag className={role === 'corruptor' ? 'bg-red-300' : 'bg-green-300'}>
           {role === 'corruptor' ? 'YOU ARE THE CORRUPTOR' : 'CREW'}
         </Tag>
         <Tag className="bg-red-300">DOOM {doom}/3</Tag>
         {phase === 'typing' && running && <Countdown until={myDeadline} prefix="⏱ " />}
-        {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1">{banner}</span>}
+        <span aria-live="polite" className="min-w-0">
+          {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 break-words inline-block">{banner}</span>}
+        </span>
       </div>
 
       {phase === 'typing' && (
@@ -117,19 +119,19 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
               <div className="flex flex-wrap gap-2">
                 {others.map(p => (
                   <React.Fragment key={p.userId}>
-                    <Btn className="text-xs" disabled={sabotageUsed}
+                    <Btn className="text-xs max-w-full truncate" disabled={sabotageUsed}
                       onClick={() => { setSabotageUsed(true); sendGameEvent('sabotage', { tool: 'sticky', targetId: p.userId }); }}>
-                      🍯 sticky {p.name}
+                      <span aria-hidden="true">🍯</span> sticky {p.name}
                     </Btn>
-                    <Btn className="text-xs" disabled={sabotageUsed}
+                    <Btn className="text-xs max-w-full truncate" disabled={sabotageUsed}
                       onClick={() => { setSabotageUsed(true); sendGameEvent('sabotage', { tool: 'shrink', targetId: p.userId }); }}>
-                      ⏳ shrink {p.name}
+                      <span aria-hidden="true">⏳</span> shrink {p.name}
                     </Btn>
                   </React.Fragment>
                 ))}
                 <Btn className="text-xs" disabled={sabotageUsed}
                   onClick={() => { setSabotageUsed(true); sendGameEvent('sabotage', { tool: 'fake' }); }}>
-                  🪞 fake my accuracy
+                  <span aria-hidden="true">🪞</span> fake my accuracy
                 </Btn>
               </div>
             </Panel>
@@ -138,23 +140,26 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
       )}
 
       {(phase === 'discuss' || phase === 'vote') && board && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Panel>
             <p className="font-black uppercase text-xs tracking-widest mb-2">
               Chapter board — team score {board.teamScore} {board.slipped && <span className="text-red-600 dark:text-red-400">▼ SLIPPED</span>}
             </p>
-            <table className="w-full font-mono text-sm">
-              <tbody>
-                {board.board.map(r => (
-                  <tr key={r.userId} className="border-b-2 border-black/10 dark:border-yellow-400/10">
-                    <td className="py-1 font-bold">{r.name}{r.userId === myId ? ' (you)' : ''}</td>
-                    <td className="text-right">{r.wpm} wpm</td>
-                    <td className={`text-right ${r.acc < 75 ? 'text-red-600 dark:text-red-400 font-black' : ''}`}>{r.acc}%</td>
-                    <td className="text-right">{r.done ? '✓' : '✗'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[300px] font-mono text-sm">
+                <caption className="sr-only">Every typist's speed and accuracy for this chapter</caption>
+                <tbody>
+                  {board.board.map(r => (
+                    <tr key={r.userId} className="border-b-2 border-black/10 dark:border-yellow-400/10">
+                      <td className="py-1 font-bold max-w-[8rem] truncate">{r.name}{r.userId === myId ? ' (you)' : ''}</td>
+                      <td className="text-right whitespace-nowrap">{r.wpm} wpm</td>
+                      <td className={`text-right ${r.acc < 75 ? 'text-red-600 dark:text-red-400 font-black' : ''}`}>{r.acc}%</td>
+                      <td className="text-right">{r.done ? <span role="img" aria-label="finished">✓</span> : <span role="img" aria-label="did not finish">✗</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {phase === 'discuss'
               ? <p className="font-mono text-xs font-bold mt-2 uppercase">Discuss — vote opens <Countdown until={board.discussEndsAt} /></p>
               : (
@@ -162,9 +167,9 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
                   <p className="font-black uppercase text-sm mb-2">Accuse (<Countdown until={voteEndsAt} />)</p>
                   <div className="flex flex-wrap gap-2">
                     {others.map(p => (
-                      <Btn key={p.userId} color="bg-red-300" className="text-xs"
+                      <Btn key={p.userId} color="bg-red-300" className="text-xs max-w-full truncate"
                         onClick={() => sendGameEvent('vote', { targetId: p.userId })}>
-                        ☠ {p.name}
+                        <span aria-hidden="true">☠</span> {p.name}
                       </Btn>
                     ))}
                     <Btn className="text-xs" onClick={() => sendGameEvent('vote', { targetId: null })}>skip</Btn>
@@ -178,11 +183,11 @@ const CorruptorGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ room, m
 
       {phase === 'storyvote' && storyVote && (
         <Panel className="text-center py-8">
-          <p className="text-2xl font-black uppercase mb-1">Choose the path</p>
+          <p className="text-xl sm:text-2xl font-black uppercase mb-1">Choose the path</p>
           <p className="font-mono text-sm mb-4">one of these leads to doom · <Countdown until={storyVote.endsAt} /></p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             {storyVote.choices.map(c => (
-              <Btn key={c} color="bg-green-300" className="text-lg" onClick={() => sendGameEvent('storyvote', { choice: c })}>
+              <Btn key={c} color="bg-green-300" className="w-full md:w-auto text-base sm:text-lg" onClick={() => sendGameEvent('storyvote', { choice: c })}>
                 {c}
               </Btn>
             ))}

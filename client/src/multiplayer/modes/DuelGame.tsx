@@ -73,7 +73,7 @@ const DuelGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
     onDone: ({ chars, errors }) => sendGameEvent('progress', { chars, errors, done: true }),
   });
 
-  if (!leg) return <p className="text-center font-mono font-black animate-pulse mt-10">DRAWING SWORDS…</p>;
+  if (!leg) return <p role="status" aria-live="polite" className="text-center font-mono font-black animate-pulse mt-10 px-4 break-words">DRAWING SWORDS…</p>;
 
   const me = leg.players.find(p => p.userId === myId) || leg.players[0];
   const them = leg.players.find(p => p.userId !== myId) || leg.players[1];
@@ -83,36 +83,38 @@ const DuelGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-red-300 text-lg">⚔️ LEG {leg.leg}/{leg.bestOf}</Tag>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-red-300 text-base sm:text-lg"><span aria-hidden="true">⚔️</span> LEG {leg.leg}/{leg.bestOf}</Tag>
         <Tag className={leg.rated ? 'bg-pink-300' : 'bg-gray-200 dark:bg-black'}>{leg.rated ? 'RATED' : 'FRIENDLY'}</Tag>
         <Tag>FIRST TO {leg.legsToWin}</Tag>
-        {countdown > 0 && <span className="font-mono text-2xl font-black animate-pulse">GET READY… {countdown}</span>}
-        {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1">{banner}</span>}
+        {countdown > 0 && <span className="font-mono text-xl sm:text-2xl font-black animate-pulse">GET READY… {countdown}</span>}
+        <span aria-live="polite" className="min-w-0">
+          {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 break-words inline-block">{banner}</span>}
+        </span>
       </div>
 
       <Panel className="py-4">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <div className="text-right">
-            <p className="font-black uppercase text-lg truncate">{me?.name}<span className="text-xs ml-1 text-pink-600 dark:text-yellow-400">(you)</span></p>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+          <div className="text-right min-w-0">
+            <p className="font-black uppercase text-sm sm:text-lg truncate">{me?.name}<span className="text-xs ml-1 text-pink-600 dark:text-yellow-400">(you)</span></p>
             {me?.rating != null && <p className="font-mono text-xs font-bold">{me.rating} rating</p>}
           </div>
-          <div className="font-mono font-black text-5xl md:text-6xl tracking-widest bg-black text-white dark:bg-yellow-400 dark:text-black px-4 py-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          <div className="font-mono font-black text-3xl sm:text-5xl md:text-6xl tracking-widest bg-black text-white dark:bg-yellow-400 dark:text-black px-2 sm:px-4 py-1 whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
             {myScore} – {theirScore}
           </div>
-          <div className="text-left">
-            <p className="font-black uppercase text-lg truncate">{them?.name || '…'}</p>
+          <div className="text-left min-w-0">
+            <p className="font-black uppercase text-sm sm:text-lg truncate">{them?.name || '…'}</p>
             {them?.rating != null && <p className="font-mono text-xs font-bold">{them.rating} rating</p>}
           </div>
         </div>
       </Panel>
 
       {legEnd ? (
-        <Panel className="text-center py-6">
-          <p className="text-2xl font-black uppercase mb-3">{banner}</p>
-          <div className="flex justify-center gap-6 font-mono font-bold">
+        <Panel className="text-center py-6" aria-live="polite">
+          <p className="text-xl sm:text-2xl font-black uppercase mb-3 break-words">{banner}</p>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-6 font-mono font-bold">
             {Object.entries(legEnd.scores).map(([id, s]) => (
-              <span key={id} className={id === myId ? 'text-pink-600 dark:text-yellow-400' : ''}>
+              <span key={id} className={`break-words ${id === myId ? 'text-pink-600 dark:text-yellow-400' : ''}`}>
                 {s.name}: {s.wpm} wpm · {s.acc}%
               </span>
             ))}

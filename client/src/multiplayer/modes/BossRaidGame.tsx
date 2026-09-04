@@ -56,7 +56,7 @@ const BossRaidGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) 
     onDone: stats => sendGameEvent('sentence', stats),
   });
 
-  if (!state) return <p className="text-center font-mono font-black animate-pulse mt-10">THE {boss || 'BOSS'} STIRS…</p>;
+  if (!state) return <p role="status" aria-live="polite" className="text-center font-mono font-black animate-pulse mt-10 px-4 break-words">THE {boss || 'BOSS'} STIRS…</p>;
 
   const cursed = curse && now < curse.until ? curse.curse : null;
   const curseClass =
@@ -75,43 +75,47 @@ const BossRaidGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) 
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-red-300 text-lg">☠️ {boss}</Tag>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-red-300 text-base sm:text-lg"><span aria-hidden="true">☠️</span> {boss}</Tag>
         {state.enraged && <Tag className="bg-red-500 text-white animate-pulse">ENRAGED</Tag>}
         {me && <Tag className={me.combo > 0 ? 'bg-yellow-300' : ''}>COMBO ×{(1 + me.combo * 0.25).toFixed(2)}</Tag>}
-        {banner && <span className="font-mono text-sm font-bold">{banner}</span>}
+        <span className="font-mono text-sm font-bold break-words min-w-0" aria-live="polite">{banner}</span>
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <span className="font-black uppercase text-sm w-24">Boss HP</span>
-          <div className="flex-1 h-6 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="font-black uppercase text-xs sm:text-sm w-16 sm:w-24 shrink-0">Boss HP</span>
+          <div className="flex-1 min-w-0 h-6 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
             <div className={`h-full transition-all ${state.enraged ? 'bg-red-600' : 'bg-red-400'}`} style={{ width: `${bossPct}%` }} />
           </div>
-          <span className="font-mono font-black w-16 text-right">{Math.round(bossPct)}%</span>
+          <span className="font-mono font-black w-12 sm:w-16 text-right shrink-0">{Math.round(bossPct)}%</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-black uppercase text-sm w-24">Team HP</span>
-          <div className="flex-1 h-4 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="font-black uppercase text-xs sm:text-sm w-16 sm:w-24 shrink-0">Team HP</span>
+          <div className="flex-1 min-w-0 h-4 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
             <div className="h-full bg-green-500 transition-all" style={{ width: `${state.teamHP}%` }} />
           </div>
-          <span className="font-mono font-black w-16 text-right">{state.teamHP}</span>
+          <span className="font-mono font-black w-12 sm:w-16 text-right shrink-0">{state.teamHP}</span>
         </div>
       </div>
 
       {state.casting && (
-        <div className={`${brutal.border} border-red-600 bg-red-100 dark:bg-red-950 p-4 animate-pulse`}>
-          <p className="font-black uppercase mb-2">
-            ⚠ CASTING — type the counter-spell <span className="bg-black text-white px-2 font-mono">{state.casting.word}</span> and press enter · <Countdown until={state.casting.endsAt} />
+        <div className={`${brutal.border} border-red-600 bg-red-100 dark:bg-red-950 p-3 sm:p-4 animate-pulse`} aria-live="polite">
+          <p className="font-black uppercase mb-2 break-words">
+            <span aria-hidden="true">⚠</span> CASTING — type the counter-spell <span className="bg-black text-white px-2 font-mono break-all">{state.casting.word}</span> and press enter · <Countdown until={state.casting.endsAt} />
           </p>
-          <input
-            value={counterBuf}
-            onChange={e => setCounterBuf(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') submitCounter(); }}
-            placeholder="counter-spell"
-            className="border-4 border-red-600 bg-white dark:bg-black px-3 py-1 font-mono text-lg outline-none"
-          />
-          <span className="font-mono text-xs font-bold ml-3 uppercase">interrupting drops your sentence focus — someone take it</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <label className="sr-only" htmlFor="raid-counter">Counter-spell</label>
+            <input
+              id="raid-counter"
+              value={counterBuf}
+              onChange={e => setCounterBuf(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') submitCounter(); }}
+              placeholder="counter-spell"
+              className="w-full sm:w-auto border-4 border-red-600 bg-white dark:bg-black px-3 py-1 font-mono text-lg outline-none"
+            />
+            <span className="font-mono text-xs font-bold uppercase break-words">interrupting drops your sentence focus — someone take it</span>
+          </div>
         </div>
       )}
 
@@ -122,12 +126,12 @@ const BossRaidGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) 
 
       <Panel>
         <p className="font-black uppercase text-xs tracking-widest mb-2">Damage meters</p>
-        {state.players.sort((a, b) => b.damage - a.damage).map(p => (
-          <div key={p.userId} className="flex justify-between font-mono text-sm border-b border-black/10 dark:border-yellow-400/10 py-0.5">
-            <span className={p.userId === myId ? 'font-black text-pink-600 dark:text-yellow-400' : 'font-bold'}>
+        {[...state.players].sort((a, b) => b.damage - a.damage).map(p => (
+          <div key={p.userId} className="flex flex-wrap justify-between gap-2 font-mono text-sm border-b border-black/10 dark:border-yellow-400/10 py-0.5">
+            <span className={`min-w-0 truncate ${p.userId === myId ? 'font-black text-pink-600 dark:text-yellow-400' : 'font-bold'}`}>
               {p.userId === myId ? '▸ ' : ''}{p.name}
             </span>
-            <span>{p.damage} dmg · ×{(1 + p.combo * 0.25).toFixed(2)}</span>
+            <span className="whitespace-nowrap">{p.damage} dmg · ×{(1 + p.combo * 0.25).toFixed(2)}</span>
           </div>
         ))}
       </Panel>

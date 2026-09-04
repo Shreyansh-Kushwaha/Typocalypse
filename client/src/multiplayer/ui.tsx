@@ -126,7 +126,7 @@ export const ChatBox: React.FC<{ messages: ChatMsg[]; onSend: (text: string) => 
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   return (
-    <Panel className="flex flex-col h-56">
+    <Panel className="flex flex-col h-[40vh] max-h-64 sm:h-56">
       <p className="font-black uppercase text-xs tracking-widest mb-2">{title}</p>
       <div className="flex-1 overflow-y-auto font-mono text-sm space-y-1">
         {messages.map((m, i) => (

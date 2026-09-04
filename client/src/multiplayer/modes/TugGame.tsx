@@ -68,23 +68,23 @@ const TugGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
     }
   };
 
-  if (!teams) return <p className="text-center font-mono font-black animate-pulse mt-10">PICKING TEAMS…</p>;
+  if (!teams) return <p role="status" aria-live="polite" className="text-center font-mono font-black animate-pulse mt-10 px-4 break-words">PICKING TEAMS…</p>;
 
   const knot = state?.knot ?? 0;
   const knotPct = ((knot + 100) / 200) * 100;
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-purple-300 text-lg">🪢 PULL {state?.pull ?? 1}</Tag>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-purple-300 text-base sm:text-lg"><span aria-hidden="true">🪢</span> PULL {state?.pull ?? 1}</Tag>
         <Tag className={myTeam === 'teal' ? 'bg-cyan-300' : 'bg-red-300'}>YOU ARE {myTeam.toUpperCase()}</Tag>
         <Tag>TEAL {state?.wins.teal ?? 0} — {state?.wins.crimson ?? 0} CRIMSON</Tag>
         {state && <Countdown until={state.endsAt} prefix="⏱ " />}
-        {banner && <span className="font-mono text-sm font-bold">{banner}</span>}
+        <span className="font-mono text-sm font-bold break-words min-w-0" aria-live="polite">{banner}</span>
       </div>
 
       <Panel>
-        <div className="flex justify-between font-black uppercase text-sm mb-2">
+        <div className="flex flex-wrap justify-between gap-2 font-black uppercase text-xs sm:text-sm mb-2">
           <span className="text-cyan-600 dark:text-cyan-400">◀ TEAL GOAL · pull {state?.teal ?? 0} wpm</span>
           <span className="text-red-600 dark:text-red-400">pull {state?.crimson ?? 0} wpm · CRIMSON GOAL ▶</span>
         </div>
@@ -98,19 +98,21 @@ const TugGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
       </Panel>
 
       {power && (
-        <div className={`${brutal.border} border-yellow-500 bg-yellow-100 dark:bg-yellow-950 p-3 animate-pulse font-black uppercase`}>
-          ⚡ POWER WORD <span className="font-mono bg-black text-white px-2">{power.word}</span> — first team to type it gets a yank
+        <div className={`${brutal.border} border-yellow-500 bg-yellow-100 dark:bg-yellow-950 p-3 animate-pulse font-black uppercase break-words`} aria-live="polite">
+          <span aria-hidden="true">⚡</span> POWER WORD <span className="font-mono bg-black text-white px-2 break-all">{power.word}</span> — first team to type it gets a yank
         </div>
       )}
 
       <Panel className={flash ? 'bg-red-200 dark:bg-red-900' : ''}>
         <p className="font-black uppercase text-xs tracking-widest mb-2">Type then space — typos mute your pull for 2s</p>
-        <p className="font-mono text-3xl font-black mb-3">
+        <p className="font-mono text-2xl sm:text-3xl font-black mb-3 break-all">
           <span className="bg-green-400 text-black">{current.startsWith(buffer) ? buffer : ''}</span>
           {current.startsWith(buffer) ? current.slice(buffer.length) : current}
-          <span className="text-gray-400 text-xl ml-4">{words.slice(idx + 1, idx + 5).join(' ')}</span>
+          <span className="text-gray-400 text-lg sm:text-xl ml-4">{words.slice(idx + 1, idx + 5).join(' ')}</span>
         </p>
+        <label className="sr-only" htmlFor="tug-input">Type the current word, then press space</label>
         <input
+          id="tug-input"
           autoFocus
           value={buffer}
           onChange={e => setBuffer(e.target.value.replace(/\s/g, ''))}
@@ -120,14 +122,14 @@ const TugGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => {
         />
       </Panel>
 
-      <div className="grid grid-cols-2 gap-4 font-mono text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-sm">
         <Panel>
           <p className="font-black uppercase text-cyan-600 dark:text-cyan-400 mb-1">Team Teal</p>
-          {teams.teal.map(p => <div key={p.userId}>{p.userId === myId ? '▸ ' : ''}{p.name}</div>)}
+          {teams.teal.map(p => <div key={p.userId} className="truncate">{p.userId === myId ? '▸ ' : ''}{p.name}</div>)}
         </Panel>
         <Panel>
           <p className="font-black uppercase text-red-600 dark:text-red-400 mb-1">Team Crimson</p>
-          {teams.crimson.map(p => <div key={p.userId}>{p.userId === myId ? '▸ ' : ''}{p.name}</div>)}
+          {teams.crimson.map(p => <div key={p.userId} className="truncate">{p.userId === myId ? '▸ ' : ''}{p.name}</div>)}
         </Panel>
       </div>
     </div>

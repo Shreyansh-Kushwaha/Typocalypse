@@ -20,6 +20,7 @@ export const FollowButton: React.FC<{
   const { user, guestLogin } = useAuth();
   const [following, setFollowing] = useState(!!initial);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => { setFollowing(!!initial); }, [initial, username]);
 
@@ -28,6 +29,7 @@ export const FollowButton: React.FC<{
   const toggle = async () => {
     if (busy) return;
     setBusy(true);
+    setFailed(false);
     try {
       if (!user) await guestLogin();
       const path = `/social/follow/${encodeURIComponent(username)}`;
@@ -37,21 +39,36 @@ export const FollowButton: React.FC<{
       onChange?.(!!res.data.following, res.data.counts);
     } catch {
       // leave the button where it was; the next click retries
+      setFailed(true);
     } finally {
       setBusy(false);
     }
   };
 
+  const label = busy
+    ? (following ? 'Unfollowing…' : 'Following…')
+    : following ? '✓ Following' : '+ Follow';
+  const action = following ? `Unfollow ${username}` : `Follow ${username}`;
+
   return (
-    <Btn
-      color={following ? 'bg-white' : 'bg-pink-300'}
-      className={`${small ? 'text-xs py-1 px-2' : ''} ${className}`}
-      onClick={toggle}
-      disabled={busy}
-      title={following ? `Unfollow ${username}` : `Follow ${username}`}
-    >
-      {following ? '✓ Following' : '+ Follow'}
-    </Btn>
+    <span className="inline-flex flex-col items-start gap-1">
+      <Btn
+        color={following ? 'bg-white' : 'bg-pink-300'}
+        className={`${small ? 'text-xs py-1 px-2' : ''} ${className}`}
+        onClick={toggle}
+        disabled={busy}
+        aria-busy={busy}
+        aria-label={action}
+        title={action}
+      >
+        {label}
+      </Btn>
+      {failed && !busy && (
+        <span role="alert" className="font-mono text-[10px] font-bold uppercase text-red-600 dark:text-red-400">
+          Did not save — tap again
+        </span>
+      )}
+    </span>
   );
 };
 

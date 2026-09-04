@@ -115,15 +115,15 @@ const HordeGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-green-300 text-lg">🧟 WAVE {field.wave}</Tag>
-        <Tag>☠ {field.zombies.length + field.remaining} LEFT</Tag>
-        <Tag>💰 {field.points} PTS</Tag>
-        {field.nukes > 0 && <Btn className="text-xs py-1" color="bg-red-400" onClick={() => sendGameEvent('nuke', {})}>☢️ NUKE ×{field.nukes}</Btn>}
-        {banner && <span className="font-mono text-sm font-bold">{banner}</span>}
+        <Tag className="bg-green-300 text-base sm:text-lg"><span aria-hidden="true">🧟</span> WAVE {field.wave}</Tag>
+        <Tag><span aria-hidden="true">☠</span> {field.zombies.length + field.remaining} LEFT</Tag>
+        <Tag><span aria-hidden="true">💰</span> {field.points} PTS</Tag>
+        {field.nukes > 0 && <Btn className="text-xs py-1" color="bg-red-400" onClick={() => sendGameEvent('nuke', {})}><span aria-hidden="true">☢️</span> NUKE ×{field.nukes}</Btn>}
+        <span className="font-mono text-sm font-bold break-words" aria-live="polite">{banner}</span>
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="font-black uppercase text-sm whitespace-nowrap">Barricade</span>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <span className="font-black uppercase text-xs sm:text-sm whitespace-nowrap">Barricade</span>
         <div className="flex-1 h-6 border-4 border-black dark:border-yellow-400 overflow-hidden bg-gray-200 dark:bg-black">
           <div className={`h-full ${hpColor} transition-all`} style={{ width: `${field.hp}%` }} />
         </div>
@@ -134,7 +134,9 @@ const HordeGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
         <div
           tabIndex={0}
           onKeyDown={handleFieldKey}
-          className={`relative h-[420px] bg-white dark:bg-black ${brutal.border} ${brutal.shadowSm} outline-none focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] overflow-hidden`}
+          role="group"
+          aria-label="Zombie field — type a word to claim and kill that zombie, escape drops your target"
+          className={`relative h-[55vh] min-h-[280px] sm:h-[420px] bg-white dark:bg-black ${brutal.border} ${brutal.shadowSm} outline-none focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] overflow-hidden`}
         >
           {field.zombies.map(z => {
             const mine = z.id === targetRef.current;
@@ -153,7 +155,7 @@ const HordeGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
                 }`}
                 style={{ top: `${(z.row / WALL) * 88}%`, left: `${z.col}%`, transform: 'translateX(-50%)' }}
               >
-                🧟 <span className="bg-green-400 text-black font-black">{z.word.slice(0, typed)}</span>{z.word.slice(typed)}
+                <span aria-hidden="true">🧟</span> <span className="bg-green-400 text-black font-black">{z.word.slice(0, typed)}</span>{z.word.slice(typed)}
               </div>
             );
           })}
@@ -165,11 +167,11 @@ const HordeGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
 
       {phase === 'shop' && shop && (
         <Panel>
-          <p className="text-2xl font-black uppercase mb-1">🛒 Between waves — spend team points</p>
+          <p className="text-xl sm:text-2xl font-black uppercase mb-1"><span aria-hidden="true">🛒</span> Between waves — spend team points</p>
           <p className="font-mono text-sm mb-4">next wave in <Countdown until={shop.endsAt} /> · pool {field.points} pts</p>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             {Object.entries(shop.items).map(([key, item]) => (
-              <Btn key={key} disabled={field.points < item.cost} onClick={() => sendGameEvent('buy', { item: key })}>
+              <Btn key={key} className="w-full sm:w-auto" disabled={field.points < item.cost} onClick={() => sendGameEvent('buy', { item: key })}>
                 {item.label} — {item.cost}
               </Btn>
             ))}
@@ -179,11 +181,11 @@ const HordeGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) => 
 
       {phase === 'story' && story && (
         <div className="space-y-2">
-          <p className="font-black uppercase">
-            📖 Story beat — everyone finish the passage (+20 pts each) · <Countdown until={story.endsAt} />
+          <p className="font-black uppercase break-words">
+            <span aria-hidden="true">📖</span> Story beat — everyone finish the passage (+20 pts each) · <Countdown until={story.endsAt} />
           </p>
           <TypingText text={story.text} pos={storyTyping.pos} onKeyDown={storyTyping.handleKey} disabled={storyTyping.done} />
-          {storyTyping.done && <p className="font-mono font-black animate-pulse">✓ DONE — waiting for the squad</p>}
+          {storyTyping.done && <p className="font-mono font-black animate-pulse" aria-live="polite">✓ DONE — waiting for the squad</p>}
         </div>
       )}
     </div>

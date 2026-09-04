@@ -59,16 +59,18 @@ const WordWarGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-red-300 text-lg">⚔️ WORD WAR</Tag>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-red-300 text-base sm:text-lg"><span aria-hidden="true">⚔️</span> WORD WAR</Tag>
         {endsAt > 0 && <Countdown until={endsAt} prefix="⏱ " />}
         {me && <Tag className={me.streak >= 3 ? 'bg-yellow-300 animate-pulse' : ''}>STREAK {me.streak}/5</Tag>}
-        {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1">{banner}</span>}
+        <span aria-live="polite" className="min-w-0">
+          {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 break-words inline-block">{banner}</span>}
+        </span>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <Panel className={flash ? 'bg-red-200 dark:bg-red-900' : ''}>
-          <p className="font-black uppercase text-xs tracking-widest mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Panel className={`min-w-0 ${flash ? 'bg-red-200 dark:bg-red-900' : ''}`}>
+          <p className="font-black uppercase text-xs tracking-widest mb-2 break-words">
             Your queue {me?.queue.length ?? 0}/{cap} · {me?.points ?? 0} pts {me && !me.alive && '· 💀 OUT'}
           </p>
           <div className="flex flex-wrap gap-2 mb-3 min-h-16">
@@ -86,7 +88,9 @@ const WordWarGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =
               );
             })}
           </div>
+          <label className="sr-only" htmlFor="wordwar-input">Type a word from your queue, then press space</label>
           <input
+            id="wordwar-input"
             autoFocus
             value={buffer}
             disabled={!me?.alive}
@@ -100,8 +104,8 @@ const WordWarGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =
 
         <div className="space-y-4">
           {opponents.map(p => (
-            <Panel key={p.userId}>
-              <p className="font-black uppercase text-xs tracking-widest mb-2">
+            <Panel key={p.userId} className="min-w-0">
+              <p className="font-black uppercase text-xs tracking-widest mb-2 break-words">
                 {p.name} {p.queue.length}/{cap} · {p.points} pts · streak {p.streak} {!p.alive && '· 💀 OUT'}
               </p>
               <div className="h-3 border-2 border-black dark:border-yellow-400 overflow-hidden">

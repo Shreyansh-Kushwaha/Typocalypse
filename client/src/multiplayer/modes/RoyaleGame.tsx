@@ -44,30 +44,32 @@ const RoyaleGame: React.FC<{ room: RoomSnapshot; myId: string }> = ({ myId }) =>
     report: p => sendGameEvent('progress', p),
   });
 
-  if (!round) return <p className="text-center font-mono font-black animate-pulse mt-10">ENTERING THE ARENA…</p>;
+  if (!round) return <p role="status" aria-live="polite" className="text-center font-mono font-black animate-pulse mt-10 px-4 break-words">ENTERING THE ARENA…</p>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tag className="bg-red-300 text-lg">👑 ROUND {round.round}</Tag>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Tag className="bg-red-300 text-base sm:text-lg"><span aria-hidden="true">👑</span> ROUND {round.round}</Tag>
         <Tag>{remaining} LEFT</Tag>
-        <span className="font-mono text-xl font-black">
+        <span className="font-mono text-lg sm:text-xl font-black">
           {now < round.startAt ? `GO IN ${Math.ceil((round.startAt - now) / 1000)}` : <Countdown until={round.endsAt} prefix="⏱ " />}
         </span>
-        {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 animate-pulse">{banner}</span>}
+        <span aria-live="polite" className="min-w-0">
+          {banner && <span className="font-black uppercase bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 animate-pulse break-words inline-block">{banner}</span>}
+        </span>
       </div>
 
       {alive ? (
         <TypingText text={round.text} pos={pos} onKeyDown={handleKey} disabled={!running} shakeOn={typingErrors} />
       ) : (
         <Panel>
-          <p className="font-black uppercase mb-2">👻 Spectating — bet on who survives this round (+10 pts)</p>
+          <p className="font-black uppercase mb-2 break-words"><span aria-hidden="true">👻</span> Spectating — bet on who survives this round (+10 pts)</p>
           <div className="flex flex-wrap gap-2">
             {standings.map(p => (
               <Btn
                 key={p.userId}
                 color={myBet === p.userId ? 'bg-yellow-300' : 'bg-white'}
-                className="text-xs"
+                className="text-xs max-w-full truncate"
                 onClick={() => { setMyBet(p.userId); sendGameEvent('bet', { targetId: p.userId }); }}
               >
                 {myBet === p.userId ? '● ' : ''}{p.name}

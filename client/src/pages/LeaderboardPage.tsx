@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { SeoFor } from '../seo';
 import { Btn, Panel, Tag, useNow } from '../multiplayer/ui';
 import { Chip } from '../social/Chip';
+import { Bar, ErrorPanel, Rank, SkeletonBlock, SkeletonRows } from '../social/Skeleton';
 
 interface Row {
   rank: number;
@@ -44,48 +46,59 @@ const LeaderboardPage: React.FC = () => {
   const [mode, setMode] = useState('all');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [season, setSeason] = useState<Season | null>(null);
+  const [seasonState, setSeasonState] = useState<'loading' | 'ready' | 'error'>('loading');
   const now = useNow(60000);
 
-  useEffect(() => {
-    document.title = 'Global Ladder — Typocalypse';
-    return () => { document.title = 'Typocalypse — survive the typing apocalypse'; };
+  const loadSeason = useCallback(() => {
+    setSeasonState('loading');
+    axios.get('/seasons/current')
+      .then(res => { setSeason(res.data); setSeasonState('ready'); })
+      .catch(() => { setSeason(null); setSeasonState('error'); });
   }, []);
 
-  useEffect(() => {
-    axios.get('/seasons/current').then(res => setSeason(res.data)).catch(() => setSeason(null));
-  }, []);
-
-  useEffect(() => {
+  const loadRows = useCallback(() => {
     setLoading(true);
+    setError('');
     axios.get('/leaderboard', { params: { period, scope, mode } })
-      .then(res => setRows(res.data.rows))
-      .catch(() => setRows([]))
+      .then(res => setRows(res.data.rows || []))
+      .catch(err => {
+        setRows([]);
+        setError(err?.response?.data?.error || 'The ladder is not answering right now.');
+      })
       .finally(() => setLoading(false));
   }, [period, scope, mode]);
 
-  const periodLabel = period === 'weekly' ? 'this week' : period === 'season' ? `in Season ${season?.number ?? ''}`.trim() : 'yet';
+  useEffect(loadSeason, [loadSeason]);
+  useEffect(loadRows, [loadRows]);
+
+  const periodWord = period === 'weekly' ? 'this week' : period === 'season' ? 'this season' : '';
   const modeLabel = MODES.find(m => m[0] === mode)?.[1] || mode;
+  const modeBit = mode === 'all' ? '' : ` in ${modeLabel} mode`;
+  const emptyText = `${periodWord ? ` ${periodWord}` : ''}${modeBit} yet`;
 
   return (
     <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans relative pb-16">
+      <SeoFor path="/leaderboard" />
       <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter">
             {scope === 'friends' ? 'Friends' : 'Global'} <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-2">Ladder</span>
           </h1>
           <Btn color="bg-red-400" onClick={() => navigate(user ? '/dashboard' : '/')}>Back</Btn>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-6 space-y-6 relative z-10">
-        <div className="flex flex-wrap items-center gap-3">
+      <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 relative z-10">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {([['weekly', 'This week'], ['season', `Season ${season?.number ?? ''}`.trim()], ['all', 'All time']] as [Period, string][]).map(([p, label]) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`font-black uppercase px-4 py-2 border-4 border-black dark:border-yellow-400 ${
+              aria-pressed={period === p}
+              className={`font-black uppercase px-3 sm:px-4 py-2 border-4 border-black dark:border-yellow-400 ${
                 period === p ? 'bg-black text-white dark:bg-yellow-400 dark:text-black' : 'bg-white dark:bg-black'
               }`}
             >
@@ -95,7 +108,9 @@ const LeaderboardPage: React.FC = () => {
           {user && (
             <div className="flex gap-1 sm:ml-auto">
               {(['global', 'friends'] as Scope[]).map(s => (
-                <Chip key={s} active={scope === s} onClick={() => setScope(s)} className="text-sm px-3 py-2">{s === 'global' ? '🌍 Global' : '🫂 Friends'}</Chip>
+                <Chip key={s} active={scope === s} onClick={() => setScope(s)} className="text-sm px-3 py-2">
+                  <span aria-hidden="true">{s === 'global' ? '🌍' : '🫂'}</span> {s === 'global' ? 'Global' : 'Friends'}
+                </Chip>
               ))}
             </div>
           )}
@@ -105,37 +120,51 @@ const LeaderboardPage: React.FC = () => {
           {MODES.map(([k, label]) => <Chip key={k} active={mode === k} onClick={() => setMode(k)}>{label}</Chip>)}
         </div>
 
-        {season && (
+        {seasonState === 'loading' ? (
+          <SkeletonBlock label="Loading the season" className="flex flex-wrap items-center gap-2">
+            <Bar className="h-6 w-32" />
+            <Bar className="h-6 w-40" />
+            <Bar className="h-6 w-24" />
+          </SkeletonBlock>
+        ) : seasonState === 'error' ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-sm font-bold">Season standings unavailable.</span>
+            <Btn color="bg-yellow-300" className="text-xs py-1" onClick={loadSeason}>Retry</Btn>
+          </div>
+        ) : season ? (
           <div className="flex flex-wrap items-center gap-2">
-            <Tag className="bg-yellow-300 text-sm">🏁 Season {season.number}</Tag>
+            <Tag className="bg-yellow-300 text-sm"><span aria-hidden="true">🏁</span> Season {season.number}</Tag>
             <span className="font-mono text-sm font-bold">ends in <span className="font-black">{untilText(season.endsAt, now)}</span></span>
             <Tag>{season.players} ranked</Tag>
             {season.myRank && <Tag className="bg-green-300">you: #{season.myRank}</Tag>}
           </div>
-        )}
+        ) : null}
 
-        <Panel>
+        <Panel className="p-4 sm:p-6">
           <p className="font-mono text-[11px] font-bold uppercase text-gray-500 dark:text-yellow-400/60 mb-3">
             Best clean run per player · {modeLabel} · runs under 80% accuracy do not count
           </p>
           {loading ? (
-            <p className="font-mono font-black animate-pulse py-8 text-center">LOADING LADDER…</p>
+            <SkeletonRows rows={8} label={`Loading the ${modeLabel} ladder`} />
+          ) : error ? (
+            <ErrorPanel bare message={error} onRetry={loadRows} retryLabel="Reload the ladder" />
           ) : rows.length === 0 ? (
-            <p className="font-mono font-bold py-8 text-center">
+            <p className="font-mono font-bold py-8 text-center break-words">
               {scope === 'friends'
-                ? <>No runs from you or your friends {periodLabel}. <Link to="/friends" className="underline">Follow some typists</Link>.</>
-                : <>No runs recorded {periodLabel}. Set the first record.</>}
+                ? <>No runs from you or your friends{emptyText}. <Link to="/friends" className="underline">Follow some typists</Link>.</>
+                : <>No runs recorded{emptyText}. Set the first record.</>}
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full font-mono text-sm md:text-base" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <table className="w-full min-w-[420px] font-mono text-sm md:text-base" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                <caption className="sr-only">Best clean run per player, {modeLabel} mode</caption>
                 <thead>
                   <tr className="text-left border-b-4 border-black dark:border-yellow-400 font-black uppercase text-xs">
-                    <th className="py-2 pr-2">#</th>
-                    <th>Typist</th>
-                    <th className="text-right">Best WPM</th>
-                    <th className="text-right hidden sm:table-cell">Avg acc</th>
-                    <th className="text-right hidden sm:table-cell">Runs</th>
+                    <th scope="col" className="py-2 pr-2">#</th>
+                    <th scope="col">Typist</th>
+                    <th scope="col" className="text-right">Best WPM</th>
+                    <th scope="col" className="text-right hidden sm:table-cell">Avg acc</th>
+                    <th scope="col" className="text-right hidden sm:table-cell">Runs</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,10 +175,10 @@ const LeaderboardPage: React.FC = () => {
                         r.me ? 'bg-yellow-200 dark:bg-yellow-400/20 font-black' : ''
                       }`}
                     >
-                      <td className="py-2 pr-2 font-black">
-                        {r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}
+                      <td className="py-2 pr-2 font-black"><Rank rank={r.rank} /></td>
+                      <td className="font-bold max-w-[10rem] truncate">
+                        <Link to={`/u/${encodeURIComponent(r.username)}`} className="underline decoration-2 underline-offset-2 hover:bg-black hover:text-white dark:hover:bg-yellow-400 dark:hover:text-black">{r.username}</Link>{r.me ? ' (you)' : ''}
                       </td>
-                      <td className="font-bold"><Link to={`/u/${encodeURIComponent(r.username)}`} className="underline decoration-2 underline-offset-2 hover:bg-black hover:text-white dark:hover:bg-yellow-400 dark:hover:text-black">{r.username}</Link>{r.me ? ' (you)' : ''}</td>
                       <td className="text-right font-black">{r.bestWpm}</td>
                       <td className="text-right hidden sm:table-cell">{r.avgAccuracy}%</td>
                       <td className="text-right hidden sm:table-cell">{r.games}</td>
@@ -162,14 +191,14 @@ const LeaderboardPage: React.FC = () => {
         </Panel>
 
         {season && season.lastSeason.length > 0 && (
-          <Panel>
-            <p className="font-black uppercase text-xs tracking-widest mb-3">🏁 Season {season.number - 1} podium</p>
-            <div className="grid sm:grid-cols-3 gap-3">
+          <Panel className="p-4 sm:p-6">
+            <p className="font-black uppercase text-xs tracking-widest mb-3"><span aria-hidden="true">🏁</span> Season {season.number - 1} podium</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {season.lastSeason.map(a => (
                 <div key={a.rank} className={`border-2 border-black dark:border-yellow-400 p-3 ${a.rank === 1 ? 'bg-yellow-300 dark:bg-black' : a.rank === 2 ? 'bg-gray-200 dark:bg-black' : 'bg-orange-300 dark:bg-black'}`}>
-                  <p className="text-2xl">{['🥇', '🥈', '🥉'][a.rank - 1]}</p>
-                  <Link to={`/u/${encodeURIComponent(a.username)}`} className="font-black uppercase underline decoration-2 underline-offset-2">{a.username}</Link>
-                  <p className="font-mono text-xs font-bold mt-1">{a.title} · {a.bestWpm} WPM</p>
+                  <p className="text-2xl"><Rank rank={a.rank} /></p>
+                  <Link to={`/u/${encodeURIComponent(a.username)}`} className="font-black uppercase underline decoration-2 underline-offset-2 block truncate">{a.username}</Link>
+                  <p className="font-mono text-xs font-bold mt-1 break-words">{a.title} · {a.bestWpm} WPM</p>
                 </div>
               ))}
             </div>
@@ -177,7 +206,7 @@ const LeaderboardPage: React.FC = () => {
         )}
 
         {!user && (
-          <Panel className="text-center">
+          <Panel className="text-center p-4 sm:p-6">
             <p className="font-black uppercase mb-3">Want a friends-only ladder?</p>
             <Link to="/login"><Btn color="bg-yellow-300">Log in</Btn></Link>
           </Panel>
