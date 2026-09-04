@@ -47,9 +47,16 @@ router.get('/campaign', optionalAuth, async (req, res, next) => {
   }
 });
 
+// A browser navigating to /campaign/:nodeId wants the app, not JSON. This has
+// to run BEFORE authenticateToken, or a shared node link 401s for anyone who
+// is not signed in instead of loading the page.
+const htmlFallthrough = (req, res, next) => {
+  if (req.accepts(['html', 'json']) === 'html') return next('route');
+  next();
+};
+
 // ---- one node with its passage (locked -> 403) ----
-router.get('/campaign/:nodeId', authenticateToken, async (req, res, next) => {
-  if (req.accepts(['html', 'json']) === 'html') return next();
+router.get('/campaign/:nodeId', htmlFallthrough, authenticateToken, async (req, res, next) => {
   try {
     const node = nodeById(req.params.nodeId);
     if (!node) return res.status(404).json({ error: 'No such node' });
