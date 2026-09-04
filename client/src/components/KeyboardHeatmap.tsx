@@ -1,8 +1,8 @@
 import React from 'react';
+import { useSettings } from '../contexts/SettingsContext';
+import { heatRows } from '../layouts';
 
 export interface KeyStat { h: number; m: number }
-
-const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', "zxcvbnm,.'"];
 
 // fold case so 'E' and 'e' count as one key
 export function foldKeyStats(raw: Record<string, KeyStat>): Record<string, KeyStat> {
@@ -17,7 +17,10 @@ export function foldKeyStats(raw: Record<string, KeyStat>): Record<string, KeySt
 }
 
 // Sequential single-hue ramp on miss rate; neutral below 5 attempts.
-const KeyboardHeatmap: React.FC<{ keyStats: Record<string, KeyStat> }> = ({ keyStats }) => {
+// Rows follow the layout chosen in Settings (qwerty by default).
+const KeyboardHeatmap: React.FC<{ keyStats: Record<string, KeyStat>; layout?: string }> = ({ keyStats, layout }) => {
+  const { settings } = useSettings();
+  const rows = heatRows(layout || settings.layout);
   const folded = foldKeyStats(keyStats);
   const heat = (ch: string) => {
     const v = folded[ch];
@@ -40,9 +43,9 @@ const KeyboardHeatmap: React.FC<{ keyStats: Record<string, KeyStat> }> = ({ keyS
   };
   return (
     <div className="space-y-1.5 overflow-x-auto pb-1">
-      {KEY_ROWS.map((row, ri) => (
+      {rows.map((row, ri) => (
         <div key={ri} className="flex gap-1.5" style={{ paddingLeft: `${ri * 14}px` }}>
-          {row.split('').map(ch => cell(ch))}
+          {Array.from(row).map(ch => cell(ch))}
         </div>
       ))}
       <div className="flex" style={{ paddingLeft: '56px' }}>

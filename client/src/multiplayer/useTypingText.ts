@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sfx } from '../sound';
+import { translateKey } from '../layouts';
+import { getSettingsSnapshot } from '../contexts/SettingsContext';
 
 interface Options {
   enabled: boolean;
@@ -49,6 +51,9 @@ export function useTypingText(text: string, opts: Options) {
     const s = stateRef.current;
     if (!o.enabled || s.done || !text) return;
     let key = e.key;
+    // Settings > Keyboard: type Dvorak/Colemak/... on a QWERTY board
+    const st = getSettingsSnapshot();
+    if (st.emulateLayout && st.layout !== 'qwerty') key = translateKey(e, st.layout);
     if (key === ' ') e.preventDefault();
     if (key.length > 1) return;
     if (o.keymap) key = o.keymap(key);

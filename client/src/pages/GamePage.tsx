@@ -4,6 +4,7 @@ import axios from 'axios';
 import { streamStory } from '../stream';
 import { sfx, isMuted, toggleMute } from '../sound';
 import { copyGhostLink } from '../share';
+import { useCaretClass } from '../theme';
 
 interface KeyStat { h: number; m: number }
 
@@ -11,6 +12,7 @@ const GamePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const genre = searchParams.get('genre') || 'fantasy';
   const navigate = useNavigate();
+  const caretClass = useCaretClass();
 
   const [gameId, setGameId] = useState<string | null>(null);
   const [story, setStory] = useState('');
@@ -148,6 +150,7 @@ const GamePage: React.FC = () => {
       totalTyped: totalTyped + 1,
       durationMs,
       keyStats: keyStatsRef.current,
+      localHour: new Date().getHours(),
     }).then(res => {
       if (res.data?.streak?.current) setStreakNow(res.data.streak.current);
     }).catch(() => {});
@@ -232,7 +235,7 @@ const GamePage: React.FC = () => {
               key={letterIndex}
               className={`
                 ${isTyped ? 'text-black dark:text-black bg-green-400 dark:bg-green-400 font-black' : ''}
-                ${isCurrent ? 'bg-pink-500 text-white dark:bg-yellow-400 dark:text-black animate-pulse font-black border-b-4 border-black dark:border-yellow-400' : ''}
+                ${isCurrent ? caretClass : ''}
                 ${!isTyped && !isCurrent ? 'text-gray-400 dark:text-yellow-400/40' : ''}
               `}
             >
@@ -241,7 +244,7 @@ const GamePage: React.FC = () => {
           );
         })}
         {wordIndex === currentWordIndex && currentLetterIndex === word.length && wordIndex < words.length - 1 && (
-          <span key="space" className="bg-pink-500 text-white dark:bg-yellow-400 animate-pulse border-b-4 border-black dark:border-yellow-400 inline-block w-4">&nbsp;</span>
+          <span key="space" className={`${caretClass} inline-block w-4`}>&nbsp;</span>
         )}
       </span>
     );
@@ -332,7 +335,7 @@ const GamePage: React.FC = () => {
           `}
         >
           {!showChoices ? (
-            <div className="leading-relaxed select-none outline-none">
+            <div className="typo-text leading-relaxed select-none outline-none">
               {words.map((word, index) => renderWord(word, index))}
               {isStreaming && (
                 <span className="inline-block w-4 h-6 bg-pink-500 dark:bg-yellow-400 animate-pulse align-middle" />

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useCaretClass } from '../theme';
 
 export const brutal = {
   shadow: 'shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_#facc15]',
@@ -58,6 +59,7 @@ export const TypingText: React.FC<{
   shakeOn?: number;
 }> = ({ text, pos, onKeyDown, className = '', disabled, shakeOn }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const caretClass = useCaretClass();
   const [shaking, setShaking] = useState(false);
   const lastShake = useRef(shakeOn ?? 0);
   useEffect(() => {
@@ -76,7 +78,7 @@ export const TypingText: React.FC<{
       ref={ref}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className={`font-mono text-lg md:text-xl leading-relaxed outline-none select-none p-4 bg-white dark:bg-black ${brutal.border} ${shaking ? 'animate-[typoshake_0.2s_linear]' : ''} focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] ${className}`}
+      className={`typo-text font-mono text-lg md:text-xl leading-relaxed outline-none select-none p-4 bg-white dark:bg-black ${brutal.border} ${shaking ? 'animate-[typoshake_0.2s_linear]' : ''} focus:shadow-[8px_8px_0px_0px_#ff007f] dark:focus:shadow-[8px_8px_0px_0px_#fff] ${className}`}
     >
       {text.split('').map((ch, i) => (
         <span
@@ -85,7 +87,7 @@ export const TypingText: React.FC<{
             i < pos
               ? 'text-black dark:text-black bg-green-400 font-bold'
               : i === pos
-                ? 'bg-pink-500 text-white dark:bg-yellow-400 dark:text-black animate-pulse font-bold'
+                ? caretClass
                 : 'text-gray-400 dark:text-yellow-400/40'
           }
         >

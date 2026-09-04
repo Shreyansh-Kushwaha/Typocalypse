@@ -97,3 +97,11 @@ html.dark body {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+@keyframes toastin {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Cosmetics (themes, carets, fonts, reduced motion) live in themes.css,
+   imported from main.tsx. Typing surfaces opt in with the `typo-text` class. */

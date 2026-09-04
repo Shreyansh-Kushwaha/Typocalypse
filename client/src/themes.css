@@ -1,0 +1,218 @@
+/* ======================================================================
+   Typocalypse cosmetics: theme presets, caret styles, fonts, motion.
+
+   Themes are CSS variable presets keyed by html[data-theme]. `brutal`
+   (light) and `midnight` (dark) are the untouched originals; every other
+   theme also gets class `themed` on <html>, which remaps the hardcoded
+   brutalist Tailwind palette (bg-white, border-black, the #000/#facc15
+   hard shadows, the #ff007f focus pop...) onto the variables.
+     --paper   page background        --panel  card background
+     --ink     text / borders / shadows
+     --accent  highlight fill (replaces yellow-400)
+     --pop     the pink focus/caret colour
+   ====================================================================== */
+:root {
+  --paper: #f4f4f0;
+  --panel: #ffffff;
+  --ink: #000000;
+  --accent: #facc15;
+  --pop: #ff007f;
+  --typo-scale: 1;
+}
+html.dark {
+  --paper: #000000;
+  --panel: #000000;
+  --ink: #facc15;
+  --accent: #facc15;
+  --pop: #ffffff;
+}
+
+/* ---- presets (paper, ink/accent, pop from the server catalog previews) */
+html[data-theme="paper"]     { --paper: #efe6cf; --panel: #f8f2e2; --ink: #2b1d0e; --accent: #d9a441; --pop: #b45309; }
+html[data-theme="bubblegum"] { --paper: #ffe4f1; --panel: #fff6fb; --ink: #3a0020; --accent: #ff8fc6; --pop: #ff2d95; }
+html[data-theme="arctic"]    { --paper: #e8f4ff; --panel: #ffffff; --ink: #0b2545; --accent: #8fd0ff; --pop: #1e90ff; }
+html[data-theme="ember"]     { --paper: #140800; --panel: #200d00; --ink: #ff6a00; --accent: #ff6a00; --pop: #ffd166; }
+html[data-theme="toxic"]     { --paper: #03110a; --panel: #071a10; --ink: #39ff14; --accent: #39ff14; --pop: #c6ff00; }
+html[data-theme="terminal"]  { --paper: #000000; --panel: #000000; --ink: #00ff88; --accent: #00ff88; --pop: #8dffc9; }
+html[data-theme="blood"]     { --paper: #0a0000; --panel: #160000; --ink: #ff1a1a; --accent: #ff1a1a; --pop: #ffffff; }
+html[data-theme="royal"]     { --paper: #0f0020; --panel: #1a0538; --ink: #ffd700; --accent: #ffd700; --pop: #c084fc; }
+
+/* high contrast wins over any preset (declared later, same specificity) */
+html.high-contrast      { --paper: #ffffff; --panel: #ffffff; --ink: #000000; --accent: #ffff00; --pop: #0000ff; }
+html.high-contrast.dark { --paper: #000000; --panel: #000000; --ink: #ffffff; --accent: #ffffff; --pop: #00ffff; }
+
+html.themed, html.themed body { background-color: var(--paper); color: var(--ink); }
+
+/* ---------------------------------------------------------------- light-side classes */
+html.themed .bg-\[\#f4f4f0\] { background-color: var(--paper) !important; }
+html.themed .bg-white, html.themed .hover\:bg-white:hover { background-color: var(--panel) !important; }
+html.themed .bg-white\/80 { background-color: color-mix(in srgb, var(--panel) 80%, transparent) !important; }
+html.themed .bg-black,
+html.themed .hover\:bg-black:hover,
+html.themed .group:hover .group-hover\:bg-black { background-color: var(--ink) !important; }
+html.themed .bg-black\/30 { background-color: color-mix(in srgb, var(--ink) 30%, transparent) !important; }
+html.themed .bg-yellow-400 { background-color: var(--accent) !important; }
+html.themed .bg-pink-500 { background-color: var(--pop) !important; }
+html.themed .bg-gray-100 { background-color: color-mix(in srgb, var(--ink) 6%, var(--panel)) !important; }
+html.themed .bg-gray-200 { background-color: color-mix(in srgb, var(--ink) 12%, var(--panel)) !important; }
+
+html.themed .text-black, html.themed .hover\:text-black:hover { color: var(--ink) !important; }
+html.themed .text-black\/70 { color: color-mix(in srgb, var(--ink) 70%, transparent) !important; }
+html.themed .text-black\/60 { color: color-mix(in srgb, var(--ink) 60%, transparent) !important; }
+html.themed .text-white,
+html.themed .hover\:text-white:hover,
+html.themed .group:hover .group-hover\:text-white,
+html.themed .text-\[\#f4f4f0\] { color: var(--paper) !important; }
+html.themed .text-gray-400 { color: color-mix(in srgb, var(--ink) 45%, transparent) !important; }
+html.themed .text-gray-500 { color: color-mix(in srgb, var(--ink) 55%, transparent) !important; }
+html.themed .text-gray-600 { color: color-mix(in srgb, var(--ink) 65%, transparent) !important; }
+html.themed .text-pink-600 { color: var(--pop) !important; }
+html.themed .hover\:text-yellow-400:hover { color: var(--accent) !important; }
+
+html.themed .border-black { border-color: var(--ink) !important; }
+html.themed .border-black\/10 { border-color: color-mix(in srgb, var(--ink) 10%, transparent) !important; }
+html.themed .border-black\/20 { border-color: color-mix(in srgb, var(--ink) 20%, transparent) !important; }
+html.themed .border-black\/40 { border-color: color-mix(in srgb, var(--ink) 40%, transparent) !important; }
+html.themed .border-white\/40 { border-color: color-mix(in srgb, var(--paper) 40%, transparent) !important; }
+html.themed .border-pink-500 { border-color: var(--pop) !important; }
+
+html.themed .shadow-\[4px_4px_0px_0px_\#000\] { box-shadow: 4px 4px 0 0 var(--ink) !important; }
+html.themed .shadow-\[6px_6px_0px_0px_\#000\] { box-shadow: 6px 6px 0 0 var(--ink) !important; }
+html.themed .shadow-\[8px_8px_0px_0px_\#000\] { box-shadow: 8px 8px 0 0 var(--ink) !important; }
+html.themed .shadow-\[10px_10px_0px_0px_\#000\] { box-shadow: 10px 10px 0 0 var(--ink) !important; }
+html.themed .shadow-\[12px_12px_0px_0px_\#000\] { box-shadow: 12px 12px 0 0 var(--ink) !important; }
+html.themed .hover\:shadow-\[2px_2px_0px_0px_\#000\]:hover { box-shadow: 2px 2px 0 0 var(--ink) !important; }
+html.themed .hover\:shadow-\[4px_4px_0px_0px_\#000\]:hover { box-shadow: 4px 4px 0 0 var(--ink) !important; }
+html.themed .hover\:shadow-\[6px_6px_0px_0px_\#000\]:hover { box-shadow: 6px 6px 0 0 var(--ink) !important; }
+html.themed .hover\:shadow-\[8px_8px_0px_0px_\#000\]:hover { box-shadow: 8px 8px 0 0 var(--ink) !important; }
+html.themed .shadow-\[8px_8px_0px_0px_\#ff007f\] { box-shadow: 8px 8px 0 0 var(--pop) !important; }
+html.themed .shadow-\[12px_12px_0px_0px_\#ff007f\] { box-shadow: 12px 12px 0 0 var(--pop) !important; }
+html.themed .focus\:shadow-\[4px_4px_0px_0px_\#ff007f\]:focus { box-shadow: 4px 4px 0 0 var(--pop) !important; }
+html.themed .focus\:shadow-\[8px_8px_0px_0px_\#ff007f\]:focus { box-shadow: 8px 8px 0 0 var(--pop) !important; }
+html.themed .focus\:shadow-\[12px_12px_0px_0px_\#ff007f\]:focus { box-shadow: 12px 12px 0 0 var(--pop) !important; }
+html.themed .shadow-\[8px_8px_0px_0px_\#fff\] { box-shadow: 8px 8px 0 0 var(--paper) !important; }
+html.themed .shadow-\[10px_10px_0px_0px_\#fff\] { box-shadow: 10px 10px 0 0 var(--paper) !important; }
+html.themed .hover\:shadow-\[6px_6px_0px_0px_\#fff\]:hover { box-shadow: 6px 6px 0 0 var(--paper) !important; }
+html.themed .hover\:shadow-\[8px_8px_0px_0px_\#fff\]:hover { box-shadow: 8px 8px 0 0 var(--paper) !important; }
+
+/* ---------------------------------------------------------------- dark: variants (only when the theme is dark) */
+html.themed.dark .dark\:bg-black { background-color: var(--paper) !important; }
+html.themed.dark .bg-white.dark\:bg-black,
+html.themed.dark .bg-cyan-300.dark\:bg-black,
+html.themed.dark .bg-pink-300.dark\:bg-black,
+html.themed.dark .bg-green-300.dark\:bg-black,
+html.themed.dark .bg-orange-300.dark\:bg-black,
+html.themed.dark .bg-purple-300.dark\:bg-black,
+html.themed.dark .bg-yellow-300.dark\:bg-black,
+html.themed.dark .bg-red-300.dark\:bg-black,
+html.themed.dark .bg-red-400.dark\:bg-black,
+html.themed.dark .bg-red-500.dark\:bg-black,
+html.themed.dark .bg-gray-200.dark\:bg-black,
+html.themed.dark .bg-gray-100.dark\:bg-black { background-color: var(--panel) !important; }
+html.themed.dark .dark\:bg-black\/10 { background-color: color-mix(in srgb, var(--ink) 10%, transparent) !important; }
+html.themed.dark .dark\:bg-black\/50 { background-color: color-mix(in srgb, var(--paper) 50%, transparent) !important; }
+html.themed.dark .dark\:bg-yellow-400,
+html.themed.dark .dark\:hover\:bg-yellow-400:hover { background-color: var(--accent) !important; }
+html.themed.dark .dark\:bg-yellow-400\/10,
+html.themed.dark .dark\:hover\:bg-yellow-400\/10:hover,
+html.themed.dark .dark\:focus\:bg-yellow-400\/10:focus { background-color: color-mix(in srgb, var(--accent) 10%, transparent) !important; }
+html.themed.dark .dark\:bg-yellow-400\/20 { background-color: color-mix(in srgb, var(--accent) 20%, transparent) !important; }
+html.themed.dark .dark\:bg-yellow-400\/30 { background-color: color-mix(in srgb, var(--accent) 30%, transparent) !important; }
+html.themed.dark .dark\:bg-white { background-color: var(--pop) !important; }
+
+html.themed.dark .dark\:text-yellow-400,
+html.themed.dark .dark\:hover\:text-yellow-400:hover { color: var(--ink) !important; }
+html.themed.dark .dark\:text-yellow-400\/40 { color: color-mix(in srgb, var(--ink) 40%, transparent) !important; }
+html.themed.dark .dark\:text-yellow-400\/50 { color: color-mix(in srgb, var(--ink) 50%, transparent) !important; }
+html.themed.dark .dark\:text-yellow-400\/60 { color: color-mix(in srgb, var(--ink) 60%, transparent) !important; }
+html.themed.dark .dark\:text-yellow-400\/70 { color: color-mix(in srgb, var(--ink) 70%, transparent) !important; }
+html.themed.dark .dark\:placeholder\:text-yellow-400\/30::placeholder { color: color-mix(in srgb, var(--ink) 30%, transparent) !important; }
+html.themed.dark .dark\:text-black,
+html.themed.dark .dark\:hover\:text-black:hover { color: var(--paper) !important; }
+
+html.themed.dark .dark\:border-yellow-400 { border-color: var(--ink) !important; }
+html.themed.dark .dark\:border-yellow-400\/10 { border-color: color-mix(in srgb, var(--ink) 10%, transparent) !important; }
+html.themed.dark .dark\:border-yellow-400\/20 { border-color: color-mix(in srgb, var(--ink) 20%, transparent) !important; }
+html.themed.dark .dark\:border-yellow-400\/40 { border-color: color-mix(in srgb, var(--ink) 40%, transparent) !important; }
+html.themed.dark .dark\:border-yellow-400\/50 { border-color: color-mix(in srgb, var(--ink) 50%, transparent) !important; }
+html.themed.dark .dark\:border-white { border-color: var(--pop) !important; }
+html.themed.dark .dark\:border-black { border-color: var(--paper) !important; }
+html.themed.dark .dark\:divide-yellow-400 > :not([hidden]) ~ :not([hidden]) { border-color: var(--ink) !important; }
+
+html.themed.dark .dark\:shadow-\[4px_4px_0px_0px_\#facc15\] { box-shadow: 4px 4px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:shadow-\[6px_6px_0px_0px_\#facc15\] { box-shadow: 6px 6px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:shadow-\[8px_8px_0px_0px_\#facc15\] { box-shadow: 8px 8px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:shadow-\[12px_12px_0px_0px_\#facc15\] { box-shadow: 12px 12px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:hover\:shadow-\[2px_2px_0px_0px_\#facc15\]:hover { box-shadow: 2px 2px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:hover\:shadow-\[4px_4px_0px_0px_\#facc15\]:hover { box-shadow: 4px 4px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:hover\:shadow-\[6px_6px_0px_0px_\#facc15\]:hover { box-shadow: 6px 6px 0 0 var(--ink) !important; }
+html.themed.dark .dark\:shadow-\[8px_8px_0px_0px_\#fff\] { box-shadow: 8px 8px 0 0 var(--pop) !important; }
+html.themed.dark .dark\:shadow-\[12px_12px_0px_0px_\#fff\] { box-shadow: 12px 12px 0 0 var(--pop) !important; }
+html.themed.dark .dark\:focus\:shadow-\[4px_4px_0px_0px_\#fff\]:focus { box-shadow: 4px 4px 0 0 var(--pop) !important; }
+html.themed.dark .dark\:focus\:shadow-\[8px_8px_0px_0px_\#fff\]:focus { box-shadow: 8px 8px 0 0 var(--pop) !important; }
+html.themed.dark .dark\:focus\:shadow-\[12px_12px_0px_0px_\#fff\]:focus { box-shadow: 12px 12px 0 0 var(--pop) !important; }
+
+/* pressed state must still flatten the shadow (declared after every shadow rule) */
+html.themed .active\:shadow-none:active,
+html.themed.dark .dark\:active\:shadow-none:active { box-shadow: none !important; }
+
+html.themed ::selection { background-color: var(--ink) !important; color: var(--paper) !important; }
+
+/* ---------------------------------------------------------------- high contrast: thicker lines */
+html.high-contrast .border-4 { border-width: 6px !important; }
+html.high-contrast .border-2 { border-width: 3px !important; }
+html.high-contrast .border-b-4 { border-bottom-width: 6px !important; }
+html.high-contrast .border-b-2 { border-bottom-width: 3px !important; }
+html.high-contrast .border-b-8 { border-bottom-width: 10px !important; }
+html.high-contrast .border-t-4 { border-top-width: 6px !important; }
+html.high-contrast .border-t-2 { border-top-width: 3px !important; }
+html.high-contrast .border-l-4 { border-left-width: 6px !important; }
+html.high-contrast .text-gray-400, html.high-contrast .text-gray-500 { color: color-mix(in srgb, var(--ink) 75%, transparent) !important; }
+html.high-contrast .opacity-20, html.high-contrast .dark\:opacity-10 { opacity: 0 !important; } /* the background grid */
+
+/* ---------------------------------------------------------------- carets (current character) */
+@keyframes caretline { 0% { box-shadow: inset 4px 0 0 0 var(--pop); } 50% { box-shadow: inset 4px 0 0 0 transparent; } 100% { box-shadow: inset 4px 0 0 0 var(--pop); } }
+@keyframes caretunder { 0% { box-shadow: inset 0 -4px 0 0 var(--pop); } 50% { box-shadow: inset 0 -4px 0 0 transparent; } 100% { box-shadow: inset 0 -4px 0 0 var(--pop); } }
+@keyframes carethue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+.caret-line { box-shadow: inset 4px 0 0 0 var(--pop); animation: caretline 1s step-end infinite; }
+.caret-underline { box-shadow: inset 0 -4px 0 0 var(--pop); animation: caretunder 1s step-end infinite; }
+.caret-box { outline: 2px solid var(--pop); outline-offset: -2px; }
+.caret-ghost { background-color: color-mix(in srgb, var(--pop) 40%, transparent); }
+.caret-rainbow { background-color: #ff007f; animation: carethue 1.6s linear infinite; }
+
+/* ---------------------------------------------------------------- motion */
+html.reduced-motion *,
+html.reduced-motion *::before,
+html.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html.reduced-motion .caret-line { box-shadow: inset 4px 0 0 0 var(--pop); animation: none; }
+html.reduced-motion .caret-underline { box-shadow: inset 0 -4px 0 0 var(--pop); animation: none; }
+html.reduced-motion .caret-rainbow { animation: none; }
+
+/* ---------------------------------------------------------------- typing surfaces: font + size
+   Give any element that renders a typed passage the class `typo-text`. */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('/fonts/OpenDyslexic-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.typo-text { zoom: var(--typo-scale, 1); }
+html[data-font="sans"] .typo-text, html[data-font="sans"] .typo-text * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+html[data-font="serif"] .typo-text, html[data-font="serif"] .typo-text * {
+  font-family: Georgia, 'Times New Roman', Times, serif !important;
+}
+html[data-font="dyslexic"] .typo-text, html[data-font="dyslexic"] .typo-text * {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', 'Comic Neue', Verdana, sans-serif !important;
+  letter-spacing: 0.03em;
+}
+
+/* settings drawer slide-in */
+@keyframes drawerin { from { transform: translateX(100%); } to { transform: translateX(0); } }
