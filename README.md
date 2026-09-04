@@ -120,6 +120,12 @@ Typocalypse/
 - **Story Library**: publish finished stories and relay chronicles; others read, like, and type them
 - **Settings**: themes, caret styles, fonts (including OpenDyslexic), text size, reduced motion, high contrast, keyboard layout emulation (Dvorak, Colemak, AZERTY, QWERTZ), sound pack and volume
 - **PWA**: installable, offline app shell, results queued offline and synced when back online
+- **Search ready**: a title, description, canonical link, robots directive and social card per route, injected server-side so crawlers see them without running JavaScript, plus `/robots.txt` and a generated `/sitemap.xml`
+- **Custom 404**: an on-theme page that names the missing path and offers somewhere to go, served with a real HTTP 404
+- **Privacy policy**: `/privacy` states exactly what is stored, what is public, and who else touches it
+- **Mobile**: every route verified in a real browser at 360px with no sideways scroll, and again at 768px and 1280px
+- **Loading states**: skeletons shaped like the final layout, an error state with a retry on every fetch, and busy labels on every button that writes
+- **Accessible**: labelled controls, described charts and heatmaps, live regions on results, and alt text that survives an image failing to load
 - **Hardened**: required JWT secret, rate-limited auth/guest/AI routes, CORS allowlist, helmet
 
 ## 🕹️ Every mode
@@ -234,6 +240,18 @@ Note for existing deployments: the email unique index is now sparse so guests ca
 
 ### Notifications
 - `GET /push/key`; `POST` / `DELETE /push/subscribe`; `POST /push/test`; `GET` / `POST /notify/prefs` - `{ email?, push? }`
+
+### Search and social metadata
+- `GET /robots.txt` - generated per host; the public pages are crawlable, the signed-in surfaces and API paths are not
+- `GET /sitemap.xml` - the public static pages plus the newest 200 published stories and the top 200 profiles, cached for 10 minutes
+- `GET /og/page/:key.png` - social card for a static page (`default`, `daily`, `campaign`, `library`, `practice`, `meteor`, `memory`, `radio`, `tournaments`, `leaderboard`, `privacy`)
+- Every HTML response carries its own `<title>`, description, canonical link, robots directive and Open Graph card. The copy lives in `server/seo.js`, which mirrors `client/src/seo.tsx` - change one and change the other. Unknown paths return a real 404 with the not-found copy.
+
+## 🧑‍💻 Notes for running it
+
+The server reads `client/dist/index.html` once at boot to inject per-route metadata, so after a client rebuild the server needs a restart to pick up the new asset names. Deploys are unaffected because the build runs before the server starts.
+
+Without a build in `client/dist` the app is served by Vite instead, and metadata injection is off - `/robots.txt`, `/sitemap.xml` and the OG card images still work.
 
 ## 🧪 Testing without a local MongoDB
 
