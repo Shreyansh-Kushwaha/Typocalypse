@@ -14,6 +14,16 @@ const gameSchema = new mongoose.Schema({
   choices: [{
     type: String
   }],
+  // every passage so far, oldest first: [{ text, choice }] - choice is what led to the NEXT passage
+  history: {
+    type: [{ text: String, choice: String }],
+    default: []
+  },
+  // set once the run is published to the library (Story _id) so it is not offered twice
+  publishedStoryId: {
+    type: String,
+    required: false
+  },
   progress: {
     type: Number,
     default: 0

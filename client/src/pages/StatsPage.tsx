@@ -84,6 +84,7 @@ const StatsPage: React.FC = () => {
       axios.post('/stats/session', {
         context: 'drill', mode: 'drill', wpm, accuracy: acc,
         errors, totalTyped: chars + errors, durationMs, keyStats: drillKeys.current,
+        localHour: new Date().getHours(),
       }).then(loadStats).catch(() => {});
     },
   });

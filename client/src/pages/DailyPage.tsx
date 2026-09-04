@@ -83,6 +83,7 @@ const DailyPage: React.FC = () => {
       axios.post('/stats/session', {
         context: 'solo', mode: 'daily', wpm, accuracy, errors,
         totalTyped: chars + errors, durationMs, keyStats: {},
+        localHour: new Date().getHours(), skipXp: true, // XP comes from /daily/result
       }).catch(() => {});
     },
   });

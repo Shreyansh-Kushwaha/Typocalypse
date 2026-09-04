@@ -55,6 +55,7 @@ const GhostRacePage: React.FC = () => {
       axios.post('/stats/session', {
         context: 'ghost', mode: ghost.genre, wpm, accuracy: acc,
         errors, totalTyped: chars + errors, durationMs: myMs, keyStats: {},
+        won, localHour: new Date().getHours(),
       }).catch(() => {});
     },
   });

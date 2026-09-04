@@ -1,12 +1,16 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import { authenticateToken, optionalAuth } from '../auth.js';
-import StatsSession from '../models/StatsSession.js';
+import StatsSession, { SESSION_CONTEXTS } from '../models/StatsSession.js';
 import Ghost from '../models/Ghost.js';
 import User from '../models/User.js';
 import MatchResult from '../models/MatchResult.js';
+import Follow from '../models/Follow.js';
 import { COMMON_WORDS, JUNK_WORDS, shuffle } from '../multiplayer/content.js';
 import { bumpStreak, getStreak } from '../streaks.js';
+import { grant, sessionXp, levelProgress } from '../progression.js';
+import { logActivity } from '../activity.js';
+import { seasonRange, seasonIdFor } from '../seasons.js';
 
 const router = express.Router();
 const MAX_GHOSTS_PER_USER = 10;
@@ -16,7 +20,7 @@ const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Number(n) || 0));
 // ---- record one finished passage ----
 router.post('/stats/session', authenticateToken, async (req, res) => {
   try {
-    const { context, mode, wpm, accuracy, errors, totalTyped, durationMs, keyStats } = req.body;
+    const { context, mode, wpm, accuracy, errors, totalTyped, durationMs, keyStats, consistency, localHour, won, skipXp } = req.body;
     const cleanKeyStats = {};
     if (keyStats && typeof keyStats === 'object') {
       for (const [ch, v] of Object.entries(keyStats)) {
@@ -28,17 +32,34 @@ router.post('/stats/session', authenticateToken, async (req, res) => {
     const session = await StatsSession.create({
       userId: req.user.userId,
       username: req.user.username,
-      context: ['solo', 'drill', 'multiplayer', 'ghost'].includes(context) ? context : 'solo',
+      context: SESSION_CONTEXTS.includes(context) ? context : 'solo',
       mode: typeof mode === 'string' ? mode.slice(0, 30) : undefined,
       wpm: clamp(wpm, 0, 300),
       accuracy: clamp(accuracy, 0, 100),
       errors: clamp(errors, 0, 100000),
       totalTyped: clamp(totalTyped, 0, 1000000),
       durationMs: clamp(durationMs, 0, 3600000),
+      consistency: consistency != null ? clamp(consistency, 0, 100) : undefined,
       keyStats: cleanKeyStats,
     });
     const streak = await bumpStreak(req.user.userId, session.context).catch(() => null);
-    res.status(201).json({ id: session._id, streak });
+
+    // personal best? (clean runs only) - checked before grant bumps the counter
+    const userBefore = await User.findById(req.user.userId).select('counters');
+    const prevBest = userBefore?.counters?.bestWpm || 0;
+    // skipXp: the caller already earned XP from a dedicated route (daily, campaign clear) - still count the passage
+    const progression = await grant(req.user.userId, {
+      xp: skipXp ? 0 : sessionXp(session),
+      event: {
+        type: 'session', context: session.context, mode: session.mode, wpm: session.wpm, accuracy: session.accuracy,
+        totalTyped: session.totalTyped, consistency: session.consistency,
+        localHour: localHour != null ? clamp(localHour, 0, 23) : null, won: !!won,
+      },
+    }).catch(() => null);
+    if (session.accuracy >= 90 && session.wpm > prevBest && session.wpm >= 30 && session.totalTyped >= 50) {
+      void logActivity(req.user.userId, req.user.username, 'personal_best', { wpm: session.wpm, accuracy: session.accuracy, context: session.context, mode: session.mode });
+    }
+    res.status(201).json({ id: session._id, streak, progression });
   } catch (error) {
     console.error('Save session error:', error);
     res.status(500).json({ error: 'Failed to save session' });
@@ -197,10 +218,23 @@ router.get('/leaderboard', optionalAuth, async (req, res, next) => {
   // Browser navigations fall through to the SPA page
   if (req.accepts(['html', 'json']) === 'html') return next();
   try {
-    const period = req.query.period === 'weekly' ? 'weekly' : 'all';
+    const period = ['weekly', 'season', 'all'].includes(req.query.period) ? req.query.period : 'all';
+    const scope = req.query.scope === 'friends' && req.user ? 'friends' : 'global';
+    const mode = typeof req.query.mode === 'string' ? req.query.mode.slice(0, 20) : 'all';
     const match = { accuracy: { $gte: 80 } };
     if (period === 'weekly') {
       match.createdAt = { $gte: new Date(Date.now() - 7 * 24 * 3600 * 1000) };
+    } else if (period === 'season') {
+      const { start, end } = seasonRange(seasonIdFor());
+      match.createdAt = { $gte: start, $lt: end };
+    }
+    if (/^(test(15|30|60)|words(25|50|100))$/.test(mode)) { match.context = 'test'; match.mode = mode; }
+    else if (mode === 'code') match.context = 'code';
+    else if (mode === 'story') match.context = 'solo';
+    else if (mode === 'campaign') match.context = 'campaign';
+    if (scope === 'friends') {
+      const edges = await Follow.find({ followerId: req.user.userId }).select('followingId');
+      match.userId = { $in: [req.user.userId, ...edges.map(e => e.followingId)] };
     }
     const rows = await StatsSession.aggregate([
       { $match: match },
@@ -216,6 +250,8 @@ router.get('/leaderboard', optionalAuth, async (req, res, next) => {
     ]);
     res.json({
       period,
+      scope,
+      mode,
       rows: rows.map((r, i) => ({
         rank: i + 1,
         userId: r._id,
@@ -328,13 +364,16 @@ router.post('/ghosts/:id/pin', authenticateToken, async (req, res) => {
 router.get('/users/:username/public', optionalAuth, async (req, res) => {
   try {
     const name = String(req.params.username || '').slice(0, 50);
-    const user = await User.findOne({ username: name }).select('_id username createdAt currentStreak longestStreak');
+    const user = await User.findOne({ username: name }).select('_id username createdAt currentStreak longestStreak xp achievements cosmetics seasonTitles rating ratingGames duelWins duelLosses counters');
     if (!user) return res.status(404).json({ error: 'Typist not found' });
     const userId = String(user._id);
-    const [stats, ghosts, matches] = await Promise.all([
+    const [stats, ghosts, matches, followers, following, iFollow] = await Promise.all([
       loadMyStats(userId),
       Ghost.find({ userId }).sort({ createdAt: -1 }).limit(5).select('wpm accuracy genre text'),
       MatchResult.find({ 'players.userId': userId }).sort({ createdAt: -1 }).limit(200).select('mode'),
+      Follow.countDocuments({ followingId: userId }),
+      Follow.countDocuments({ followerId: userId }),
+      req.user ? Follow.exists({ followerId: req.user.userId, followingId: userId }) : null,
     ]);
     const byMode = {};
     for (const m of matches) byMode[m.mode] = (byMode[m.mode] || 0) + 1;
@@ -349,6 +388,14 @@ router.get('/users/:username/public', optionalAuth, async (req, res) => {
       multiplayer: { matches: matches.length, byMode },
       ghosts: ghosts.map(g => ({ id: g._id, wpm: g.wpm, accuracy: g.accuracy, genre: g.genre, preview: g.text.slice(0, 60) })),
       isMe: !!req.user && req.user.userId === userId,
+      level: levelProgress(user.xp || 0),
+      title: user.cosmetics?.title || '',
+      theme: user.cosmetics?.theme || 'brutal',
+      seasonTitles: user.seasonTitles || [],
+      achievements: (user.achievements || []).map(a => a.key),
+      rating: { value: user.rating || 1000, games: user.ratingGames || 0, wins: user.duelWins || 0, losses: user.duelLosses || 0 },
+      social: { followers, following, iFollow: !!iFollow },
+      arcade: { meteorBest: user.counters?.meteorBest || 0 },
     });
   } catch (error) {
     console.error('Profile error:', error);

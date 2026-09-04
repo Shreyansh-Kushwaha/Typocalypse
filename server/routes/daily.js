@@ -3,6 +3,8 @@ import { authenticateToken, optionalAuth } from '../auth.js';
 import DailyResult from '../models/DailyResult.js';
 import { PASSAGES } from '../multiplayer/content.js';
 import { bumpStreak, getStreak } from '../streaks.js';
+import { grant, sessionXp } from '../progression.js';
+import { logActivity } from '../activity.js';
 
 const router = express.Router();
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -87,7 +89,12 @@ router.post('/daily/result', authenticateToken, async (req, res) => {
       $or: [{ wpm: { $gt: wpm } }, { wpm, accuracy: { $gt: accuracy } }],
     });
     const players = await DailyResult.countDocuments({ day });
-    res.status(201).json({ id: result._id, rank, players, streak });
+    const progression = await grant(req.user.userId, {
+      xp: 50 + sessionXp({ wpm, accuracy, totalTyped: text.length }),
+      event: { type: 'daily', rank, wpm, accuracy },
+    }).catch(() => null);
+    void logActivity(req.user.userId, req.user.username, 'daily', { number: day - 20690, wpm, accuracy, rank });
+    res.status(201).json({ id: result._id, rank, players, streak, progression });
   } catch (error) {
     console.error('Daily result error:', error);
     res.status(500).json({ error: 'Failed to save your run' });
