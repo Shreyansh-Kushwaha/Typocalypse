@@ -50,6 +50,25 @@ const MultiplayerHub: React.FC = () => {
       </header>
 
       <main className="max-w-6xl mx-auto p-6 space-y-8 relative z-10">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => navigate('/quickmatch')}
+            className={`text-left bg-pink-300 dark:bg-black ${brutal.border} ${brutal.shadowSm} ${brutal.hover} p-4`}
+          >
+            <p className="text-3xl mb-1">⚔️</p>
+            <p className="font-black uppercase text-lg">Quick match — rated duel</p>
+            <p className="text-sm font-medium">Queue up, get paired by rating, best of three passages. Climb the ladder.</p>
+          </button>
+          <button
+            onClick={() => navigate('/tournaments')}
+            className={`text-left bg-yellow-300 dark:bg-black ${brutal.border} ${brutal.shadowSm} ${brutal.hover} p-4`}
+          >
+            <p className="text-3xl mb-1">🏆</p>
+            <p className="font-black uppercase text-lg">Weekend tournament</p>
+            <p className="text-sm font-medium">Every Saturday 18:00 UTC. Heats of 20, one Typo Royale final, one champion.</p>
+          </button>
+        </div>
+
         <form onSubmit={joinRoom} className={`bg-white dark:bg-black ${brutal.border} ${brutal.shadow} p-6 flex flex-wrap items-center gap-4`}>
           <p className="font-black uppercase text-lg">Join a room</p>
           <input

@@ -6,15 +6,37 @@ export interface RoomPlayer {
   isHost: boolean;
 }
 
+export interface RoomTournament {
+  slug: string;
+  name: string;
+  stage: 'heat' | 'final';
+  done?: boolean;
+}
+
 export interface RoomSnapshot {
   code: string;
   mode: string;
   modeName: string;
-  settings: { genre: string };
+  settings: { genre: string; rated?: boolean };
   state: 'lobby' | 'playing' | 'ended';
-  hostUserId: string;
+  hostUserId: string | null;
+  /** server-made tournament room: no host, starts automatically at `startsAt` */
+  system?: boolean;
+  startsAt?: number | null;
+  tournament?: RoomTournament | null;
+  /** ratings at match time for rated duels */
+  ratings?: Record<string, number> | null;
   players: RoomPlayer[];
   limits: { name: string; min: number; max: number };
+}
+
+/** Rating tier label - mirrors server/elo.js */
+export function tierOf(rating: number): string {
+  if (rating < 900) return 'Scrap';
+  if (rating < 1100) return 'Survivor';
+  if (rating < 1300) return 'Raider';
+  if (rating < 1500) return 'Warlord';
+  return 'Apocalypse';
 }
 
 export interface ModeInfo {
@@ -35,6 +57,7 @@ export const MODE_LIST: ModeInfo[] = [
   { key: 'relay', name: 'Relay Chronicles', kind: 'CO-OP', players: '2-6', icon: '🕯️', blurb: 'One story typed in turns with baton passes. Votes weighted by accuracy.' },
   { key: 'corruptor', name: 'The Corruptor', kind: 'SOCIAL', players: '3-8', icon: '🎭', blurb: 'One of you is sabotaging the team. Type, argue, accuse.' },
   { key: 'tug', name: 'Tug of Words', kind: 'TEAMS', players: '2-10', icon: '🪢', blurb: 'Combined team WPM pulls the rope. Power words give burst yanks.' },
+  { key: 'duel', name: 'Duel', kind: 'PVP', players: '2', icon: '⚔️', blurb: 'Best of three passages, head to head. Rated when matched from the queue.' },
 ];
 
 export const GENRES = ['fantasy', 'horror', 'sci-fi', 'mystery', 'adventure', 'romance'];

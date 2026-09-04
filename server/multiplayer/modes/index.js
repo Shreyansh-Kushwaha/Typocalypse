@@ -6,8 +6,10 @@ import { BossRaidMode } from './bossraid.js';
 import { RelayMode } from './relay.js';
 import { CorruptorMode } from './corruptor.js';
 import { TugMode } from './tug.js';
+import { DuelMode } from './duel.js';
 
 const ENGINES = {
+  duel: DuelMode,
   sprint: SprintMode,
   royale: RoyaleMode,
   wordwar: WordWarMode,
