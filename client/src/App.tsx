@@ -28,6 +28,8 @@ import FriendsPage from './pages/FriendsPage.tsx';
 import LibraryPage from './pages/LibraryPage.tsx';
 import StoryPage from './pages/StoryPage.tsx';
 import ProgressionPage from './pages/ProgressionPage.tsx';
+import PrivacyPage from './pages/PrivacyPage.tsx';
+import NotFoundPage from './pages/NotFoundPage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import GuestGateRoute from './components/GuestGateRoute.tsx';
 import ProgressionToasts from './components/ProgressionToasts.tsx';
@@ -83,6 +85,10 @@ function App() {
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/library/:id" element={<G><StoryPage /></G>} />
               <Route path="/progress" element={<P><ProgressionPage /></P>} />
+
+              {/* public legal + catch-all */}
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </div>
         </Router>
