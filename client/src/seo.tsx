@@ -47,7 +47,7 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   },
   '/library': {
     title: 'Story library',
-    description: 'Read and type stories written by other players, from solo runs to multiplayer relay chronicles.',
+    description: 'Read and type stories written by other players, from solo story runs to multiplayer relay chronicles. Like the best ones and publish your own.',
   },
   '/practice': {
     title: 'Timed typing test',
@@ -79,15 +79,15 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   },
 
   // signed-in surfaces: useful to people, useless to a search engine
-  '/dashboard': { title: 'Dashboard', description: 'Your typing dashboard.', noIndex: true },
-  '/genre-selection': { title: 'Choose a genre', description: 'Pick a story genre.', noIndex: true },
-  '/game': { title: 'Story mode', description: 'Type the story as it is written.', noIndex: true },
-  '/multiplayer': { title: 'Multiplayer', description: 'Create or join a multiplayer typing room.', noIndex: true },
-  '/quickmatch': { title: 'Quick match', description: 'Find a rated typing duel.', noIndex: true },
-  '/friends': { title: 'Friends', description: 'Your feed and friends ladder.', noIndex: true },
-  '/stats': { title: 'Training lab', description: 'Your heatmap, coach, and drills.', noIndex: true },
-  '/progress': { title: 'Progression', description: 'Your level, achievements, and locker.', noIndex: true },
-  '/claim': { title: 'Claim your account', description: 'Turn your guest session into a full account.', noIndex: true },
+  '/dashboard': { title: 'Dashboard', description: 'Your typing dashboard: level, streak, best speed, recent runs, ghost shelf, and every mode in the game in one place.', noIndex: true },
+  '/genre-selection': { title: 'Choose a genre', description: 'Pick a genre and the story engine writes an apocalypse around it: fantasy, horror, science fiction, mystery, adventure, or romance.', noIndex: true },
+  '/game': { title: 'Story mode', description: 'Type the story as it streams in, one passage at a time, then choose the branch that decides what happens next.', noIndex: true },
+  '/multiplayer': { title: 'Multiplayer', description: 'Create or join a multiplayer typing room with a five letter code. Nine modes for two to twenty players, from co-op zombie defence to a hidden saboteur.', noIndex: true },
+  '/quickmatch': { title: 'Quick match', description: 'Find a rated one on one typing duel against someone at your level. Best of three passages, an Elo rating, and tiers from Scrap to Apocalypse.', noIndex: true },
+  '/friends': { title: 'Friends', description: 'Follow other typists, watch their personal bests and achievements land in your feed, and race them on a friends only ladder.', noIndex: true },
+  '/stats': { title: 'Training lab', description: 'Your keyboard heatmap, a coach that reads your last 200 passages, and drills built from the exact keys you keep missing.', noIndex: true },
+  '/progress': { title: 'Progression', description: 'Your level and experience bar, all 48 achievements, and the locker of themes, caret styles, and sound packs you have unlocked.', noIndex: true },
+  '/claim': { title: 'Claim your account', description: 'Turn your guest session into a full account and keep your level, streak, achievements, ghosts, and unlocked cosmetics for good.', noIndex: true },
 };
 
 const ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
