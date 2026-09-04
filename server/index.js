@@ -15,6 +15,15 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import progressRoutes from "./routes/progress.js";
 import dailyRoutes from "./routes/daily.js";
+import progressionRoutes from "./routes/progression.js";
+import socialRoutes from "./routes/social.js";
+import storiesRoutes from "./routes/stories.js";
+import arcadeRoutes from "./routes/arcade.js";
+import campaignRoutes from "./routes/campaign.js";
+import notifyRoutes from "./routes/notify.js";
+import tournamentRoutes from "./routes/tournaments.js";
+import { startSeasonJob } from "./seasons.js";
+import { startReminderJob } from "./notify.js";
 import { initOg } from "./og.js";
 import { streamStory, sse } from "./story.js";
 
@@ -59,9 +68,16 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/typocalyp
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Stats, coach, leaderboard, and ghost routes
+// Stats, coach, leaderboard, ghosts, progression, social, library, arcade, campaign, notifications
 app.use(progressRoutes);
 app.use(dailyRoutes);
+app.use(progressionRoutes);
+app.use(socialRoutes);
+app.use(storiesRoutes);
+app.use(arcadeRoutes);
+app.use(campaignRoutes);
+app.use(notifyRoutes);
+app.use(tournamentRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -349,6 +365,7 @@ app.post('/game/start-stream', aiLimiter, authenticateToken, async (req, res) =>
     const { story, choices, closed } = await streamStory(res, { choice: null, genre });
     game.currentStory = story;
     game.choices = choices;
+    game.history = [{ text: story, choice: '' }];
     await game.save();
     if (!closed) {
       sse(res, { type: 'done', gameId: game._id, story, choices, progress: 0 });
@@ -368,6 +385,10 @@ app.post('/game/continue-stream', aiLimiter, authenticateToken, async (req, res)
     if (!game) return res.status(404).json({ error: 'Game not found' });
     sseHeaders(res);
     const { story, choices, closed } = await streamStory(res, { choice, genre: game.genre });
+    // record the branch taken from the previous passage, then the new one
+    if (game.history.length) game.history[game.history.length - 1].choice = String(choice || '').slice(0, 120);
+    else if (game.currentStory) game.history.push({ text: game.currentStory, choice: String(choice || '').slice(0, 120) });
+    game.history.push({ text: story, choice: '' });
     game.currentStory = story;
     game.choices = choices;
     game.progress += 1;
@@ -465,6 +486,8 @@ async function generateStory(choice, genre = 'fantasy') {
 }
 
 initOg(app);
+startSeasonJob();
+startReminderJob();
 
 const PORT = process.env.PORT || 3000;
 const httpServer = createServer(app);
