@@ -26,12 +26,12 @@ const LandingPage: React.FC = () => {
   const brutalActive = "active:translate-x-[8px] active:translate-y-[8px] active:shadow-none dark:active:shadow-none";
 
   const features = [
-    { icon: '⚡', title: 'Adaptive Engine', description: 'Real-time difficulty adjustment based on WPM.', lightBg: 'bg-cyan-300' },
-    { icon: '🎯', title: 'Focus Protocol', description: 'Distraction-free environment. Just you and the keys.', lightBg: 'bg-pink-300' },
-    { icon: '🏆', title: 'Global Ladder', description: 'Destroy the competition and climb the ranks.', lightBg: 'bg-yellow-300' },
-    { icon: '📚', title: '7+ Sectors', description: 'Horror, Sci-Fi, Mystery, Fantasy, and Custom.', lightBg: 'bg-green-300' },
-    { icon: '🎨', title: 'High Contrast', description: 'Eye-bleedingly cool light and dark themes.', lightBg: 'bg-orange-300' },
-    { icon: '💾', title: 'Auto-Sync', description: 'Progress secured locally and in the cloud.', lightBg: 'bg-purple-300' },
+    { icon: '📖', title: 'Living Stories', description: 'AI-written passages stream in as you type. Every choice branches the plot.', lightBg: 'bg-cyan-300' },
+    { icon: '🗺️', title: 'Campaign', description: 'Four zones, 24 nodes, mutators like fog, storm, and night. Earn every star.', lightBg: 'bg-green-300' },
+    { icon: '☄️', title: 'Arcade', description: 'Meteor Shower, Last Words memory runs, and Radio dictation through the static.', lightBg: 'bg-pink-300' },
+    { icon: '⚔️', title: 'Quick Match', description: 'Rated 1v1 duels, nine multiplayer modes, and a weekend tournament.', lightBg: 'bg-yellow-300' },
+    { icon: '⬆️', title: 'Levels & Locker', description: '48 achievements, XP, unlockable themes, carets, and sound packs.', lightBg: 'bg-orange-300' },
+    { icon: '📱', title: 'Installable', description: 'Works offline as an app. Timed tests and drills never need a signal.', lightBg: 'bg-purple-300' },
   ];
 
   return (
