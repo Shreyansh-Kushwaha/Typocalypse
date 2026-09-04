@@ -1,0 +1,21 @@
+{
+  "name": "Typocalypse",
+  "short_name": "Typocalypse",
+  "description": "Survive the typing apocalypse: AI-written stories you type as they stream, multiplayer modes, ghost racing, and a daily challenge.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#facc15",
+  "categories": ["games", "education"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Daily Apocalypse", "url": "/daily", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Timed test", "url": "/practice", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
