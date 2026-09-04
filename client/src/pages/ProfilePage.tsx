@@ -6,6 +6,8 @@ import type { KeyStat } from '../components/KeyboardHeatmap';
 import { Panel, Btn, Tag } from '../multiplayer/ui';
 import { copyText } from '../share';
 import { MODE_LIST } from '../multiplayer/types';
+import { LevelBadge } from '../social/LevelBadge';
+import { FollowButton } from '../social/FollowButton';
 
 interface Profile {
   username: string;
@@ -18,7 +20,28 @@ interface Profile {
   multiplayer: { matches: number; byMode: Record<string, number> };
   ghosts: { id: string; wpm: number; accuracy: number; genre: string; preview: string }[];
   isMe: boolean;
+  level: { level: number; xp: number; floor: number; next: number; pct: number };
+  title: string;
+  theme: string;
+  seasonTitles: { season: string; number: number; rank: number; title: string }[];
+  achievements: string[];
+  rating: { value: number; games: number; wins: number; losses: number };
+  social: { followers: number; following: number; iFollow: boolean };
+  arcade?: { meteorBest: number };
 }
+interface AchievementDef { key: string; name: string; icon: string; description: string; xp: number }
+interface Person { username: string; level: number; title: string }
+
+// The catalog never changes at runtime - fetch it once per page load.
+let catalogPromise: Promise<AchievementDef[]> | null = null;
+function loadCatalog(): Promise<AchievementDef[]> {
+  if (!catalogPromise) {
+    catalogPromise = axios.get('/progression/catalog').then(res => res.data.achievements as AchievementDef[]).catch(() => { catalogPromise = null; return []; });
+  }
+  return catalogPromise;
+}
+
+const linkCls = 'underline decoration-2 underline-offset-2 hover:bg-black hover:text-white dark:hover:bg-yellow-400 dark:hover:text-black';
 
 // Public typist profile - readable logged out, built to be linked from anywhere.
 const ProfilePage: React.FC = () => {
@@ -27,17 +50,32 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [catalog, setCatalog] = useState<AchievementDef[]>([]);
+  const [list, setList] = useState<{ kind: 'followers' | 'following'; rows: Person[] | null } | null>(null);
 
   useEffect(() => {
+    setProfile(null);
+    setList(null);
+    setError('');
     axios.get(`/users/${encodeURIComponent(username || '')}/public`)
       .then(res => setProfile(res.data))
       .catch(err => setError(err?.response?.data?.error || 'Typist not found'));
   }, [username]);
 
+  useEffect(() => { loadCatalog().then(setCatalog); }, []);
+
   useEffect(() => {
     document.title = profile ? `${profile.username} — Typocalypse` : 'Typocalypse';
     return () => { document.title = 'Typocalypse'; };
   }, [profile]);
+
+  const openList = (kind: 'followers' | 'following') => {
+    if (list?.kind === kind) { setList(null); return; }
+    setList({ kind, rows: null });
+    axios.get(`/social/${encodeURIComponent(username || '')}/${kind}`)
+      .then(res => setList({ kind, rows: res.data.rows }))
+      .catch(() => setList({ kind, rows: [] }));
+  };
 
   if (error) {
     return (
@@ -54,21 +92,75 @@ const ProfilePage: React.FC = () => {
   }
 
   const maxWpm = Math.max(...profile.history.map(h => h.wpm), 1);
+  const unlocked = new Set(profile.achievements || []);
+  const unlockedDefs = catalog.filter(a => unlocked.has(a.key));
+  const level = profile.level || { level: 1, xp: 0, floor: 0, next: 100, pct: 0 };
+  const rating = profile.rating || { value: 1000, games: 0, wins: 0, losses: 0 };
+  const social = profile.social || { followers: 0, following: 0, iFollow: false };
 
   return (
     <Shell>
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">
-            <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 inline-block -rotate-1">{profile.username}</span>
-          </h2>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <LevelBadge level={level.level} pct={level.pct} />
+            <div>
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">
+                <span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-3 py-1 inline-block -rotate-1">{profile.username}</span>
+              </h2>
+              {profile.title && <p className="font-mono text-sm font-black uppercase mt-3 text-pink-600 dark:text-pink-400">✦ {profile.title}</p>}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(profile.seasonTitles || []).map(t => (
+                  <Tag key={`${t.season}-${t.rank}`} className={t.rank === 1 ? 'bg-yellow-300' : t.rank === 2 ? 'bg-gray-200' : t.rank === 3 ? 'bg-orange-300' : 'bg-white'}>🏁 {t.title}</Tag>
+                ))}
+                {profile.streak.current > 1 && <Tag className="bg-orange-300">🔥 {profile.streak.current} day streak</Tag>}
+              </div>
+              <p className="font-mono text-[11px] font-bold mt-2 text-gray-500 dark:text-yellow-400/60">
+                {level.xp.toLocaleString()} XP · {Math.max(0, level.next - level.xp).toLocaleString()} to level {level.level + 1}
+              </p>
+            </div>
+          </div>
           <div className="flex gap-2 items-center flex-wrap">
-            {profile.streak.current > 1 && <Tag className="bg-orange-300">🔥 {profile.streak.current} day streak</Tag>}
+            <FollowButton
+              username={profile.username}
+              following={social.iFollow}
+              onChange={(following, counts) => setProfile(p => p ? { ...p, social: { ...counts, iFollow: following } } : p)}
+            />
             <Btn className="text-xs py-1" onClick={async () => setCopied(await copyText(window.location.href))}>
               {copied ? '✓ Copied' : '🔗 Copy profile link'}
             </Btn>
           </div>
         </div>
+
+        <div className="flex flex-wrap gap-2 items-center">
+          <button type="button" onClick={() => openList('followers')} className={`font-mono text-sm font-black border-2 border-black dark:border-yellow-400 px-3 py-1 ${list?.kind === 'followers' ? 'bg-black text-white dark:bg-yellow-400 dark:text-black' : 'bg-white dark:bg-black'}`}>
+            {social.followers} follower{social.followers === 1 ? '' : 's'}
+          </button>
+          <button type="button" onClick={() => openList('following')} className={`font-mono text-sm font-black border-2 border-black dark:border-yellow-400 px-3 py-1 ${list?.kind === 'following' ? 'bg-black text-white dark:bg-yellow-400 dark:text-black' : 'bg-white dark:bg-black'}`}>
+            {social.following} following
+          </button>
+          {profile.isMe && <Link to="/friends" className={`font-mono text-xs font-bold ${linkCls}`}>Manage friends →</Link>}
+        </div>
+        {list && (
+          <Panel>
+            <p className="font-black uppercase text-xs tracking-widest mb-2">{list.kind === 'followers' ? 'Followers' : 'Following'}</p>
+            {list.rows === null ? (
+              <p className="font-mono text-sm font-bold animate-pulse">Loading…</p>
+            ) : list.rows.length === 0 ? (
+              <p className="font-mono text-sm font-bold">Nobody yet.</p>
+            ) : (
+              <ul className="grid sm:grid-cols-2 gap-x-6 divide-y-2 sm:divide-y-0 divide-black/10 dark:divide-yellow-400/10">
+                {list.rows.map(p => (
+                  <li key={p.username} className="py-1.5 flex items-center gap-2">
+                    <LevelBadge level={p.level} small />
+                    <Link to={`/u/${encodeURIComponent(p.username)}`} className={`font-mono text-sm font-black truncate ${linkCls}`}>{p.username}</Link>
+                    {p.title && <span className="font-mono text-[10px] uppercase font-bold text-gray-500 dark:text-yellow-400/60 truncate">{p.title}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
@@ -82,7 +174,43 @@ const ProfilePage: React.FC = () => {
               <p className="font-mono text-4xl font-black mt-2" style={{ fontVariantNumeric: 'tabular-nums' }}>{t.value}</p>
             </Panel>
           ))}
+          {rating.games > 0 && (
+            <Panel className="bg-purple-100 dark:bg-black">
+              <p className="font-black uppercase text-xs tracking-widest">⚔️ Rating</p>
+              <p className="font-mono text-4xl font-black mt-2" style={{ fontVariantNumeric: 'tabular-nums' }}>{rating.value}</p>
+              <p className="font-mono text-xs font-bold mt-1">{rating.wins}W – {rating.losses}L · {rating.games} duels</p>
+            </Panel>
+          )}
+          {(profile.arcade?.meteorBest || 0) > 0 && (
+            <Panel className="bg-cyan-100 dark:bg-black">
+              <p className="font-black uppercase text-xs tracking-widest">☄️ Meteor best</p>
+              <p className="font-mono text-4xl font-black mt-2" style={{ fontVariantNumeric: 'tabular-nums' }}>{profile.arcade!.meteorBest.toLocaleString()}</p>
+            </Panel>
+          )}
         </div>
+
+        <Panel>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <p className="font-black uppercase text-xs tracking-widest">🏆 Achievements</p>
+            <span className="font-mono text-xs font-black">{unlocked.size} / {catalog.length || '…'}{profile.isMe && <> · <Link to="/progress" className={linkCls}>see all</Link></>}</span>
+          </div>
+          {unlockedDefs.length === 0 ? (
+            <p className="font-mono text-sm font-bold">{unlocked.size === 0 ? 'Nothing unlocked yet. The first passage is the first badge.' : 'Loading…'}</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {unlockedDefs.map(a => (
+                <span
+                  key={a.key}
+                  title={`${a.name} — ${a.description} (+${a.xp} XP)`}
+                  className="inline-flex items-center gap-1 border-2 border-black dark:border-yellow-400 bg-yellow-100 dark:bg-black px-2 py-1 font-mono text-xs font-black cursor-help"
+                >
+                  <span className="text-lg leading-none">{a.icon}</span>
+                  <span className="hidden sm:inline">{a.name}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </Panel>
 
         {profile.history.length > 0 && (
           <Panel>
@@ -150,13 +278,18 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="min-h-screen bg-[#f4f4f0] dark:bg-black text-black dark:text-yellow-400 font-sans relative pb-16">
     <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
     <header className="sticky top-0 z-40 bg-[#f4f4f0] dark:bg-black border-b-4 border-black dark:border-yellow-400">
-      <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-3">
         <Link to="/" className="text-2xl font-black uppercase tracking-tighter">
           Typo<span className="bg-black text-white dark:bg-yellow-400 dark:text-black px-1">calypse</span>
         </Link>
-        <Link to="/daily">
-          <span className="font-black uppercase text-sm border-2 border-black dark:border-yellow-400 px-3 py-1 bg-orange-300 dark:bg-black">🧟 Daily</span>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/leaderboard">
+            <span className="font-black uppercase text-sm border-2 border-black dark:border-yellow-400 px-3 py-1 bg-cyan-300 dark:bg-black hidden sm:inline-block">🏆 Ladder</span>
+          </Link>
+          <Link to="/daily">
+            <span className="font-black uppercase text-sm border-2 border-black dark:border-yellow-400 px-3 py-1 bg-orange-300 dark:bg-black">🧟 Daily</span>
+          </Link>
+        </div>
       </div>
     </header>
     <main className="p-6 relative z-10">{children}</main>
